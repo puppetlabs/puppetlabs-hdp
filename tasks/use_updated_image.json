@@ -1,0 +1,11 @@
+{
+  "puppet_task_version": 1,
+  "supports_noop": false,
+  "description": "Automates the dance needed to get docker-compose to use an updated image",
+  "parameters": {
+    "service": {
+      "description": "The service you wish to update",
+      "type": "Enum[frontdoor,identity,influxdb,ingest-queue,mongo,query,rabbitmq,ui]"
+    }
+  }
+}

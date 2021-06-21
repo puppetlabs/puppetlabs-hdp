@@ -1,0 +1,71 @@
+{
+  "name": "puppetlabs-hdp",
+  "version": "0.0.1-alpha.1",
+  "author": "jpc",
+  "summary": "Configures Historical Data Platform",
+  "license": "Apache-2.0",
+  "source": "https://github.com/puppetlabs/puppetlabs-hdp.git",
+  "project_page": "https://github.com/puppetlabs/puppetlabs-hdp",
+  "issues_url": "https://github.com/puppetlabs/puppetlabs-hdp/issues",
+  "dependencies": [
+    {
+      "name": "puppetlabs/docker",
+      "version_requirement": ">= 4.0.0 < 5.0.0"
+    },
+    {
+      "name": "puppetlabs/inifile",
+      "version_requirement": ">= 2.2.1 < 5.0.0"
+    },
+    {
+      "name": "puppetlabs/stdlib",
+      "version_requirement": ">= 7.0.0 < 8.0.0"
+    }
+  ],
+  "operatingsystem_support": [
+    {
+      "operatingsystem": "CentOS",
+      "operatingsystemrelease": [
+        "7"
+      ]
+    },
+    {
+      "operatingsystem": "OracleLinux",
+      "operatingsystemrelease": [
+        "7"
+      ]
+    },
+    {
+      "operatingsystem": "RedHat",
+      "operatingsystemrelease": [
+        "7"
+      ]
+    },
+    {
+      "operatingsystem": "Scientific",
+      "operatingsystemrelease": [
+        "7"
+      ]
+    },
+    {
+      "operatingsystem": "Debian",
+      "operatingsystemrelease": [
+        "8"
+      ]
+    },
+    {
+      "operatingsystem": "Ubuntu",
+      "operatingsystemrelease": [
+        "16.04"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "name": "puppet",
+      "version_requirement": ">= 5.0.0 < 7.0.0"
+    }
+  ],
+  "pdk-version": "1.15.0",
+  "template-url": "https://github.com/puppetlabs/pdk-templates.git#master",
+  "template-ref": "heads/master-0-g3de8e77"
+}

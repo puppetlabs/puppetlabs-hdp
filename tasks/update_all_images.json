@@ -1,0 +1,7 @@
+{
+  "puppet_task_version": 1,
+  "supports_noop": false,
+  "description": "Automates the dance needed to get docker-compose to update the container for every service",
+  "parameters": {
+  }
+}

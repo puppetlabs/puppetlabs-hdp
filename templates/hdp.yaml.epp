@@ -1,0 +1,12 @@
+<%- | Array[Stdlib::HTTPUrl] $hdp_urls,
+      Optional[Stdlib::Fqdn] $pe_console = undef,
+| -%>
+# managed by puppet hdp module
+---
+'hdp_urls':
+<%  $hdp_urls.each |$url| { -%>
+  - '<%= $url %>'
+<% } -%>
+<% if $pe_console{ -%>
+'pe_console': '<%= $pe_console %>'
+<% } -%>

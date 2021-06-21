@@ -1,0 +1,100 @@
+<%- | Integer $https_port,
+      String[1] $hdp_version,
+      String[1] $image_prefix,
+| -%>
+version: '3'
+
+services:
+  data-util:
+    image: "<%= $image_prefix %>data-util:<%= $hdp_version %>"
+    tty: true
+    environment:
+      - DATA_DIR=/data
+    volumes:
+      - ./data:/data
+
+  frontdoor:
+    image: "<%= $image_prefix %>frontdoor:<%= $hdp_version %>"
+    restart: always
+    environment:
+      - IDENTITY=<%= $facts["networking"]["fqdn"] %>
+      - IDENTITY_SERVER=https://<%= $facts["networking"]["fqdn"] %>:<%= $https_port %>/auth/
+      - TOOL_DOMAIN=https://<%= $facts["networking"]["fqdn"] %>:<%= $https_port %>/
+    links:
+      - identity
+    ports:
+      - <%= $https_port %>:443
+
+  identity:
+    image: "<%= $image_prefix %>identity:<%= $hdp_version %>"
+    restart: always
+    volumes:
+      - identity-data:/opt/jboss
+
+  rabbitmq:
+    image: "<%= $image_prefix %>rabbitmq:<%= $hdp_version %>"
+    restart: always
+    hostname: rabbitmq
+    tty: true
+
+  mongo:
+    image: "<%= $image_prefix %>mongo:<%= $hdp_version %>"
+    restart: always
+    volumes:
+      - mongo-data:/bitnami
+      - ./backup:/backup
+    environment:
+      - MONGODB_DATABASE=reports
+      - ALLOW_EMPTY_PASSWORD=yes
+
+  influxdb:
+    image: "<%= $image_prefix %>influxdb:<%= $hdp_version %>"
+    volumes:
+      - influx-data:/var/lib/influxdb
+      - ./backup:/backup
+    environment:
+      - INFLUXDB_DB=reports
+      - INFLUXDB_DATA_MAX_VALUES_PER_TAG=400000
+
+  ingest-queue:
+    image: "<%= $image_prefix %>ingest-queue:<%= $hdp_version %>"
+    restart: always
+    environment:
+      - MONGO_CONNECTION=mongodb://mongo:27017/reports
+      - INFLUX_URL=http://influxdb:8086
+      - RABBITMQ_CONNECTION=amqp://rabbitmq
+    depends_on:
+      - mongo
+      - influxdb
+      - rabbitmq
+    links:
+      - mongo
+      - influxdb
+      - rabbitmq
+    command: npm run start:all:prod
+
+  ui:
+    image: "<%= $image_prefix %>ui:<%= $hdp_version %>"
+    environment:
+      - REACT_APP_QUERY_API=https://<%= $facts["networking"]["fqdn"] %>:<%= $https_port %>/query
+      - REACT_APP_IDENTITY=https://<%= $facts["networking"]["fqdn"] %>:<%= $https_port %>/auth
+
+  query:
+    tty: true
+    image: "<%= $image_prefix %>query:<%= $hdp_version %>"
+    restart: always
+    environment:
+      - MONGO_CONNECTION=mongodb://mongo:27017/reports
+      - INFLUX_URL=http://influxdb:8086
+    depends_on:
+      - mongo
+      - influxdb
+    links:
+      - mongo
+      - influxdb
+    command: ["./wait-for-it.sh", "-t", "60", "mongo:27017", "--", "npm", "run", "start:mongo-prod"]
+
+volumes:
+  identity-data:
+  mongo-data:
+  influx-data:

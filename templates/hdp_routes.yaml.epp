@@ -1,0 +1,6 @@
+# managed by puppet hdp module
+---
+master:
+  facts:
+    terminus: "<%= $hdp::report_processor::facts_terminus %>"
+    cache: "<%= $hdp::report_processor::facts_cache_terminus %>"
