@@ -103,7 +103,7 @@ class hdp::report_processor (
     group   => pe-puppet,
     mode    => '0640',
     content => epp('hdp/hdp.yaml.epp', {
-      'hdp_urls' => Array($hdp_url, true),
+      'hdp_urls'   => Array($hdp_url, true),
       'pe_console' => $pe_console,
     }),
     notify  => Service['pe-puppetserver'],

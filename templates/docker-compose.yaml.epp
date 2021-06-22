@@ -1,100 +1,68 @@
-<%- | Integer $https_port,
-      String[1] $hdp_version,
-      String[1] $image_prefix,
+<%- | String $hdp_version,
+      String $image_prefix,
+      Optional[String] $image_repository,
+      Integer $hdp_port,
+
+      Optional[String] $ca_server,
+      Optional[String] $ca_cert_file,
+      Optional[String] $key_file,
+      Optional[String] $cert_file,
+
+      String $dns_name,
+      String $hdp_user,
+      String $root_dir,
+      String $max_es_memory,
 | -%>
-version: '3'
-
+version: "3"
 services:
-  data-util:
-    image: "<%= $image_prefix %>data-util:<%= $hdp_version %>"
-    tty: true
-    environment:
-      - DATA_DIR=/data
-    volumes:
-      - ./data:/data
-
-  frontdoor:
-    image: "<%= $image_prefix %>frontdoor:<%= $hdp_version %>"
-    restart: always
-    environment:
-      - IDENTITY=<%= $facts["networking"]["fqdn"] %>
-      - IDENTITY_SERVER=https://<%= $facts["networking"]["fqdn"] %>:<%= $https_port %>/auth/
-      - TOOL_DOMAIN=https://<%= $facts["networking"]["fqdn"] %>:<%= $https_port %>/
-    links:
-      - identity
+  data:
+    image: "<% if $image_repository { %><%= $image_repository %>/<% } %><%= $image_prefix %>data-ingestion:<%= $hdp_version %>"
+    user: "<%= $hdp_user %>:<%= $hdp_user %>"
     ports:
-      - <%= $https_port %>:443
-
-  identity:
-    image: "<%= $image_prefix %>identity:<%= $hdp_version %>"
-    restart: always
+      - "<%= $hdp_port %>:9091"
     volumes:
-      - identity-data:/opt/jboss
-
-  rabbitmq:
-    image: "<%= $image_prefix %>rabbitmq:<%= $hdp_version %>"
-    restart: always
-    hostname: rabbitmq
-    tty: true
-
-  mongo:
-    image: "<%= $image_prefix %>mongo:<%= $hdp_version %>"
-    restart: always
-    volumes:
-      - mongo-data:/bitnami
-      - ./backup:/backup
-    environment:
-      - MONGODB_DATABASE=reports
-      - ALLOW_EMPTY_PASSWORD=yes
-
-  influxdb:
-    image: "<%= $image_prefix %>influxdb:<%= $hdp_version %>"
-    volumes:
-      - influx-data:/var/lib/influxdb
-      - ./backup:/backup
-    environment:
-      - INFLUXDB_DB=reports
-      - INFLUXDB_DATA_MAX_VALUES_PER_TAG=400000
-
-  ingest-queue:
-    image: "<%= $image_prefix %>ingest-queue:<%= $hdp_version %>"
-    restart: always
-    environment:
-      - MONGO_CONNECTION=mongodb://mongo:27017/reports
-      - INFLUX_URL=http://influxdb:8086
-      - RABBITMQ_CONNECTION=amqp://rabbitmq
-    depends_on:
-      - mongo
-      - influxdb
-      - rabbitmq
+      - "<%= $root_dir %>/ssl:/etc/puppetlabs/puppetdb/ssl"
     links:
-      - mongo
-      - influxdb
-      - rabbitmq
-    command: npm run start:all:prod
-
-  ui:
-    image: "<%= $image_prefix %>ui:<%= $hdp_version %>"
+      - "elasticsearch"
     environment:
-      - REACT_APP_QUERY_API=https://<%= $facts["networking"]["fqdn"] %>:<%= $https_port %>/query
-      - REACT_APP_IDENTITY=https://<%= $facts["networking"]["fqdn"] %>:<%= $https_port %>/auth
-
-  query:
-    tty: true
-    image: "<%= $image_prefix %>query:<%= $hdp_version %>"
-    restart: always
-    environment:
-      - MONGO_CONNECTION=mongodb://mongo:27017/reports
-      - INFLUX_URL=http://influxdb:8086
-    depends_on:
-      - mongo
-      - influxdb
+      - "HDP_SSL_DIR=/etc/puppetlabs/puppetdb/ssl"
+      <% if $ca_server { %>
+      - "HDP_CASERVER=<%= $ca_server %>"
+      <% } %>
+      <% if $ca_cert_file { %>
+      - "HDP_CACERTFILE=<%= $ca_cert_file %>"
+      <% } %>
+      <% if $key_file { %>
+      - "HDP_KEYFILE=<%= $key_file%>"
+      <% } %>
+      <% if $cert_file { %>
+      - "HDP_CERTFILE=<%= $cert_file%>"
+      <% } %>
+      - "HDP_NAME=<%= $dns_name %>"
     links:
-      - mongo
-      - influxdb
-    command: ["./wait-for-it.sh", "-t", "60", "mongo:27017", "--", "npm", "run", "start:mongo-prod"]
-
-volumes:
-  identity-data:
-  mongo-data:
-  influx-data:
+      - elasticsearch
+      - redis
+  elasticsearch:
+    deploy:
+      resources:
+        limits:
+          memory: "<%= $max_es_memory %>"
+    ## TODO acwrenn - host these images ourselves, alongside data-ingestion
+    image: "docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.1"
+    hostname: "elasticsearch"
+    environment:
+      - "node.name=elasticsearch-0"
+      - "discovery.type=single-node"
+      - "cluster.name=hdp"
+      ## TODO acwrenn - easier to preallocate, but maybe we want some slack here
+      - "ES_JAVA_OPTS=-Xms<%= $max_es_memory %> -Xmx<%= $max_es_memory %>"
+    volumes:
+      - "<%= $root_dir %>/elastic:/usr/share/elasticsearch/data"
+  redis:
+    user: "<%= $hdp_user %>:<%= $hdp_user %>"
+    ## TODO acwrenn - same as elasticsearch. Self-host
+    image: "redis:6.2.4-buster"
+    hostname: "redis"
+    volumes:
+      - "<%= $root_dir %>/redis:/data"
+    command: "redis-server --appendonly yes"
