@@ -2,8 +2,9 @@
 require 'facter'
 require 'json'
 
-Facter.add(:hdp) do
+Facter.add(:hdp_health) do
   confine kernel: 'Linux'
+  out = {}
   setcode do
     if Dir.exist?('/opt/puppetlabs/hdp')
       begin
@@ -26,10 +27,12 @@ Facter.add(:hdp) do
           image_data[key.to_s] = value
         end
 
-        image_data
+        out['image_data'] = image_data
+        out['puppet_user'] = Facter::Core::Execution.execute("bash -c \"stat -c '%G' /etc/puppetlabs/puppet/ssl/private_keys/#{Facter.value('fqdn')}.pem | xargs id -u\"").to_i
+        out
       rescue
-        nil
       end
     end
   end
 end
+

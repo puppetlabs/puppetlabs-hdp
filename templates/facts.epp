@@ -1,0 +1,4 @@
+require 'facter'
+require 'json'
+
+Facter.add(:hdp)

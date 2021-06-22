@@ -7,6 +7,3 @@
 <%  $hdp_urls.each |$url| { -%>
   - '<%= $url %>'
 <% } -%>
-<% if $pe_console{ -%>
-'pe_console': '<%= $pe_console %>'
-<% } -%>

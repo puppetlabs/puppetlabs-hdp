@@ -1,6 +1,6 @@
-# Simple class to enable the HDP report processor
+# Simple class to enable the HDP data processor
 #
-# @summary Simple class to enable the HDP report processor
+# @summary Simple class to enable the HDP data processor
 #
 # @param [HDP::Url] hdp_url
 #   The url to send reports to.
@@ -28,7 +28,7 @@
 #
 # @example Configuration via Hiera with custom port
 #   ---
-#   hdp::report_processor::hdp_url: 'https://hdp.example.com:8443/in'
+#   hdp::report_processor::hdp_url: 'https://hdp.example.com:9091/in'
 #   hdp::report_processor::pe_console: 'pe-console.example.com'
 #
 # @example Configuration in a manifest with default port
@@ -44,7 +44,7 @@
 #   # Settings applied to both a master and compilers
 #   class { 'profile::masters_and_compilers':
 #     class { 'hdp::report_processor':
-#       hdp_url  => 'https://hdp.example.com:8443/in',
+#       hdp_url  => 'https://hdp.example.com:9091/in',
 #       pe_console => 'pe-console.example.com',
 #     }
 #   }
@@ -52,19 +52,24 @@
 # @example Send data to two HDP servers
 #   ---
 #   hdp::report_processor::hdp_url:
-#     - 'https://hdp-prod.example.com:8443/in'
-#     - 'https://hdp-staging.example.com:8443/in'
-#   hdp::report_processor::pe_console: 'pe-console.example.com'
+#     - 'https://hdp-prod.example.com:9091/in'
+#     - 'https://hdp-staging.example.com:9091/in'
 #
-class hdp::report_processor (
-  HDP::Url $hdp_url,
+class hdp::data_processor (
+  HDP::Url $hdp_url = 'https://hdp.puppet:9091',
   Boolean $enable_reports = true,
   Boolean $manage_routes = true,
-  String[1] $facts_terminus = 'puppetdb',
+  String[1] $facts_terminus = 'hdp',
   String[1] $facts_cache_terminus = 'hdp',
   String[1] $reports = 'puppetdb,hdp',
-  Optional[Stdlib::Fqdn] $pe_console = undef,
 ) {
+
+  file { '/etc/puppetlabs/hdp/':
+      ensure => directory,
+      mode   => '0755',
+      owner  => 'pe-puppet',
+      group  => 'pe-puppet',
+  }
 
   if $enable_reports {
     ini_setting { 'enable hdp':
@@ -76,14 +81,16 @@ class hdp::report_processor (
       notify  => Service['pe-puppetserver'],
     }
   }
-
   if $manage_routes {
-    file { '/etc/puppetlabs/puppet/hdp_routes.yaml':
+    file { '/etc/puppetlabs/hdp/hdp_routes.yaml':
       ensure  => file,
       owner   => pe-puppet,
       group   => pe-puppet,
       mode    => '0640',
-      content => epp('hdp/hdp_routes.yaml.epp'),
+      content => epp('hdp/hdp_routes.yaml.epp', {
+        'facts_terminus'       => $facts_terminus,
+        'facts_cache_terminus' => $facts_cache_terminus,
+      }),
       notify  => Service['pe-puppetserver'],
     }
     ini_setting { 'enable hdp_routes.yaml':
@@ -91,8 +98,8 @@ class hdp::report_processor (
       path    => '/etc/puppetlabs/puppet/puppet.conf',
       section => 'master',
       setting => 'route_file',
-      value   => '/etc/puppetlabs/puppet/hdp_routes.yaml',
-      require => File['/etc/puppetlabs/puppet/hdp_routes.yaml'],
+      value   => '/etc/puppetlabs/hdp/hdp_routes.yaml',
+      require => File['/etc/puppetlabs/hdp/hdp_routes.yaml'],
       notify  => Service['pe-puppetserver'],
     }
   }
@@ -103,8 +110,7 @@ class hdp::report_processor (
     group   => pe-puppet,
     mode    => '0640',
     content => epp('hdp/hdp.yaml.epp', {
-      'hdp_urls' => Array($hdp_url, true),
-      'pe_console' => $pe_console,
+      'hdp_urls'   => Array($hdp_url, true),
     }),
     notify  => Service['pe-puppetserver'],
   }
