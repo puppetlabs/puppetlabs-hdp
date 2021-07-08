@@ -8,7 +8,16 @@
 #   Install and manage docker as part of app_stack
 #
 # @param [Integer] hdp_port
-#   Port to access HDP service
+#   Port to access HDP upload service
+#   defaults to 9091
+#
+# @param [Integer] hdp_query_port
+#   Port to access HDP query service
+#   defaults to 8080
+#
+# @param [Integer] hdp_ui port
+#   Port to access HDP UI
+#   defaults to 80
 #
 # @param String hdp_user
 #   User to run HDP + all infra services as. Also owns mounted volumes
@@ -83,6 +92,8 @@ class hdp::app_stack (
   Boolean $create_docker_group = true,
   Boolean $manage_docker = true,
   Integer $hdp_port = 9091,
+  Integer $hdp_ui_port = 80,
+  Integer $hdp_query_port = 8080,
   String $hdp_user = '11223',
   String $compose_version = '1.25.0',
   Optional[String] $image_repository = undef,
@@ -170,6 +181,8 @@ class hdp::app_stack (
         'image_prefix'     => $image_prefix,
         'image_repository' => $image_repository,
         'hdp_port'         => $hdp_port,
+        'hdp_ui_port'      => $hdp_ui_port,
+        'hdp_query_port'   => $hdp_query_port,
         'ca_server'        => $ca_server,
         'key_file'         => $key_file,
         'cert_file'        => $cert_file,

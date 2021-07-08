@@ -2,6 +2,8 @@
       String $image_prefix,
       Optional[String] $image_repository,
       Integer $hdp_port,
+      Integer $hdp_query_port,
+      Integer $hdp_ui_port,
 
       Optional[String] $ca_server,
       Optional[String] $ca_cert_file,
@@ -23,11 +25,11 @@ services:
     user: "<%= $hdp_user %>:<%= $hdp_user %>"
     ports:
       - "<%= $hdp_port %>:9091"
+      - "<%= $hdp_query_port %>:8080"
     volumes:
       - "<%= $root_dir %>/ssl:/etc/puppetlabs/puppetdb/ssl"
-    links:
-      - "elasticsearch"
     environment:
+      - "HDP_HTTP_QUERY_NO_TLS=true"
       - "HDP_SSL_DIR=/etc/puppetlabs/puppetdb/ssl"
       <% if $ca_server { %>
       - "HDP_CASERVER=<%= $ca_server %>"
@@ -72,3 +74,10 @@ services:
     volumes:
       - "<%= $root_dir %>/redis:/data"
     command: "redis-server --appendonly yes"
+  ui:
+    image: "<% if $image_repository { %><%= $image_repository %>/<% } %><%= $image_prefix %>ui<%= $hdp_version %>"
+    user: "<%= $hdp_user %>:<%= $hdp_user %>"
+    ports:
+      - "<%= $hdp_ui_port %>:80"
+    environment:
+      - "REACT_APP_QUERY_SERVICE=http://<%= dns_name %>:<%= hdp_query_port %>"

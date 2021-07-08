@@ -18,7 +18,7 @@ Puppet::Reports.register_report(:hdp) do
     current_time = Time.now
     hdp_urls = settings["hdp_urls"]
     hdp_urls.each do |host|
-      Puppet.info "HDP sending report to #{host}"
+      Puppet.info 'HDP sending report to #{host}'
       report_hash = report_to_hash(current_time)
       submit_command_to_hdp(host, CommandStoreReport, 8, self.host, current_time.clone.utc, report_hash)
     end
@@ -89,7 +89,7 @@ Puppet::Reports.register_report(:hdp) do
   # @return Array[Hash]
   # @api private
   def build_resources_list
-    profile("Build resources list (count: #{resource_statuses.count})",
+    profile('Build resources list (count: #{resource_statuses.count})',
             [:puppetdb, :resources_list, :build]) do
       resources = resource_statuses.values.map { |resource| resource_status_to_hash(resource) }
       if !config.include_unchanged_resources?
@@ -103,7 +103,7 @@ Puppet::Reports.register_report(:hdp) do
   # @return Array[Hash]
   # @api private
   def build_logs_list
-    profile("Build logs list (count: #{logs.count})",
+    profile('Build logs list (count: #{logs.count})',
             [:puppetdb, :logs_list, :build]) do
       logs.map do |log|
         {
@@ -122,7 +122,7 @@ Puppet::Reports.register_report(:hdp) do
   # @return Array[Hash}
   # @api private
   def build_metrics_list
-    profile("Build metrics list (count: #{metrics.count})",
+    profile('Build metrics list (count: #{metrics.count})',
             [:puppetdb, :metrics_list, :build]) do
       metrics_list = []
       metrics.each do |name, data|
@@ -173,7 +173,7 @@ Puppet::Reports.register_report(:hdp) do
 
   def build_events_list(events)
     profile("Build events list (count: #{events.count})",
-            [:puppetdb, :events_list, :build]) do
+            [:hdp, :events_list, :build]) do
       events.map { |event| event_to_hash(event) }
     end
   end
