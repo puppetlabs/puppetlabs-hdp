@@ -14,6 +14,12 @@ Puppet::Reports.register_report(:hdp) do
   include Puppet::Util::Puppetdb
   CommandStoreReport = Puppet::Util::Puppetdb::CommandNames::CommandStoreReport
 
+  def settings
+    return @settings if @settings
+    @settings_file = Puppet[:confdir] + "/hdp.yaml"
+    @settings = YAML.load_file(@settings_file)
+  end
+
   def process
     current_time = Time.now
     hdp_urls = settings["hdp_urls"]

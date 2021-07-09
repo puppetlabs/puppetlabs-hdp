@@ -23,7 +23,8 @@ class Puppet::Node::Facts::Hdp < Puppet::Node::Facts::Puppetdb
       current_time = Time.now
 
       keep_nodes_re = Regexp.new(settings["keep_nodes"])
-      if keep_nodes_re.match(request.instance.values.name)
+
+      if request.instance.name.match(keep_nodes_re)
         hdp_urls = settings["hdp_urls"]
         hdp_urls.each do |host|
           submit_facts(host, request, current_time.utc)

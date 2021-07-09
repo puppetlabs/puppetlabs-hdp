@@ -16,6 +16,19 @@ module Puppet::Util::Hdp
   CommandsUrl = Puppet::Util::Puppetdb::Command::CommandsUrl
   CommandReplaceFacts = Puppet::Util::Puppetdb::CommandNames::CommandReplaceFacts
 
+<<<<<<< HEAD
+=======
+  def settings
+    return @settings if @settings
+    @settings_file = Puppet[:confdir] + "/hdp.yaml"
+    @settings = YAML.load_file(@settings_file)
+  end
+
+  def pe_console
+    settings["pe_console"] || Puppet[:certname]
+  end
+
+>>>>>>> 479347f... Add facter code which collects all resources on the host via the RAL
   def get_trusted_info(node)
     trusted = Puppet.lookup(:trusted_information) do
       Puppet::Context::TrustedInformation.local(node)
