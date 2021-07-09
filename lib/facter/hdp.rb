@@ -45,7 +45,6 @@ Facter.add(:hdp) do
     begin
 
       types = []
-      Puppet::Type.loadall
       Puppet::Type.eachtype do |t|
         next if t.name == :component
         types << t.name.to_s
