@@ -46,7 +46,6 @@ Facter.add(:hdp) do
     users = {}
     raw_users = Puppet::Resource::Ral.indirection.search('user/')
     raw_users.each { |u|
-            puts u
             users[u.name] = u.parameters
     }
     out["users"] = users
