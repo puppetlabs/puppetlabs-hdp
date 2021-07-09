@@ -1,5 +1,6 @@
 # Get information about HDP
 require 'facter'
+require 'puppet'
 require 'json'
 
 Facter.add(:hdp_health) do
@@ -37,6 +38,18 @@ Facter.add(:hdp_health) do
 end
 
 Facter.add(:hdp) do
-  confine kernel: 'Linux'
+  setcode do
+    require 'puppet'
+    require 'puppet/indirector/resource/ral'
+    require 'puppet/indirector/request'
+    out = {}
+    users = {}
+    raw_users = Puppet::Resource::Ral.indirection.search('user/')
+    raw_users.each { |u|
+            puts u
+            users[u.name] = u.parameters
+    }
+    out["users"] = users
+    out
+  end
 end
-

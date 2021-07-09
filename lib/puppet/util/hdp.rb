@@ -51,7 +51,6 @@ module Puppet::Util::Hdp
 
     headers = { 'Content-Type' => 'application/json' }
     client = Puppet.runtime[:http]
-
     response = client.post(uri, payload.to_json, headers: headers, options: {
                                                    read_timeout: 5,
                                                    open_timeout: 5,
