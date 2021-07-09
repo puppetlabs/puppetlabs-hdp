@@ -1,7 +1,6 @@
 require 'puppet/node/facts'
 require 'puppet/indirector/facts/puppetdb'
 require 'puppet/indirector/facts/yaml'
-require 'puppet/util/r'
 require 'puppet/util/hdp'
 require 'json'
 require 'time'
