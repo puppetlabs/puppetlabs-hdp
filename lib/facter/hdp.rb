@@ -42,14 +42,31 @@ Facter.add(:hdp) do
     require 'puppet'
     require 'puppet/indirector/resource/ral'
     require 'puppet/indirector/request'
-    out = {}
+    begin
 
-    users = {}
-    raw_users = Puppet::Resource::Ral.indirection.search('user/')
-    raw_users.each { |u|
-            users[u.name] = u.parameters
-    }
-    out["users"] = users
-    out
+      types = []
+      Puppet::Type.loadall
+      Puppet::Type.eachtype do |t|
+        next if t.name == :component
+        types << t.name.to_s
+      end
+
+      out = {}
+      types.each { |type|
+              begin
+              res = {}
+              raw = Puppet::Resource::Ral.indirection.search("#{type}/")
+              raw.each { |r|
+                    res[r.name] = r.parameters
+              }
+              out[type] = res
+              rescue
+              end
+      }
+      out
+    rescue => err
+       puts "#{err}"
+    end
   end
 end
+
