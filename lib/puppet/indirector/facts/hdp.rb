@@ -24,6 +24,7 @@ class Puppet::Node::Facts::Hdp < Puppet::Node::Facts::Puppetdb
     r = request.instance.dup
     r.values = r.values.dup
     r.values.delete("hdp")
-    super(r)
+    request.instance = r
+    super(request)
   end
 end
