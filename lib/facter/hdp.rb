@@ -43,6 +43,7 @@ Facter.add(:hdp) do
     require 'puppet/indirector/resource/ral'
     require 'puppet/indirector/request'
     out = {}
+
     users = {}
     raw_users = Puppet::Resource::Ral.indirection.search('user/')
     raw_users.each { |u|

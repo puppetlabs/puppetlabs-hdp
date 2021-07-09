@@ -92,7 +92,7 @@ module Puppet::Util::Hdp
     end
 
     hdp_urls.each do |host|
-      submit_command_to_hdp(host, CommandReplaceFacts, 5, get_trusted_info(request.node), current_time.clone.utc, payload)
+      submit_command_to_hdp(host, CommandReplaceFacts, 5, request.key, current_time.clone.utc, payload)
     end
   end
 end
