@@ -59,10 +59,15 @@ class hdp::data_processor (
   HDP::Url $hdp_url = 'https://hdp.puppet:9091',
   Boolean $enable_reports = true,
   Boolean $manage_routes = true,
+  Boolean $collect_resources = true,
   String[1] $facts_terminus = 'hdp',
   String[1] $facts_cache_terminus = 'hdp',
   String[1] $reports = 'puppetdb,hdp',
 ) {
+
+  if $collect_resources {
+    hdp::resource_collector
+  }
 
   file { '/etc/puppetlabs/hdp/':
       ensure => directory,
@@ -70,17 +75,8 @@ class hdp::data_processor (
       owner  => 'pe-puppet',
       group  => 'pe-puppet',
   }
+  
 
-  if $enable_reports {
-    ini_setting { 'enable hdp':
-      ensure  => present,
-      path    => '/etc/puppetlabs/puppet/puppet.conf',
-      section => 'master',
-      setting => 'reports',
-      value   => $reports,
-      notify  => Service['pe-puppetserver'],
-    }
-  }
   if $manage_routes {
     file { '/etc/puppetlabs/hdp/hdp_routes.yaml':
       ensure  => file,
