@@ -66,7 +66,8 @@ class hdp::data_processor (
 ) {
 
   if $collect_resources {
-    hdp::resource_collector
+    class { 'hdp::resource_collector':
+    }
   }
 
   file { '/etc/puppetlabs/hdp/':
