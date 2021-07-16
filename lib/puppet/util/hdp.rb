@@ -16,16 +16,6 @@ module Puppet::Util::Hdp
   CommandsUrl = Puppet::Util::Puppetdb::Command::CommandsUrl
   CommandReplaceFacts = Puppet::Util::Puppetdb::CommandNames::CommandReplaceFacts
 
-  def settings
-    return @settings if @settings
-    @settings_file = Puppet[:confdir] + "/hdp.yaml"
-    @settings = YAML.load_file(@settings_file)
-  end
-
-  def pe_console
-    settings["pe_console"] || Puppet[:certname]
-  end
-
   def get_trusted_info(node)
     trusted = Puppet.lookup(:trusted_information) do
       Puppet::Context::TrustedInformation.local(node)
@@ -62,8 +52,7 @@ module Puppet::Util::Hdp
     Puppet.err _("HDP unable to submit data to %{uri} [%{code}] %{message}") % { uri: uri.path, code: response.code, message: response.body } unless (response.code == 200 || response.code == 404)
   end
 
-  def submit_facts(request, time)
-    hdp_urls = settings["hdp_urls"]
+  def submit_facts(host, request, time)
     current_time = Time.now
 
     payload = profile("Encode facts command submission payload",
@@ -89,9 +78,7 @@ module Puppet::Util::Hdp
       end
 
       payload_value
-    end
 
-    hdp_urls.each do |host|
       submit_command_to_hdp(host, CommandReplaceFacts, 5, request.key, current_time.clone.utc, payload)
     end
   end

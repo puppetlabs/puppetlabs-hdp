@@ -63,6 +63,7 @@ class hdp::data_processor (
   String[1] $facts_terminus = 'hdp',
   String[1] $facts_cache_terminus = 'hdp',
   String[1] $reports = 'puppetdb,hdp',
+  String[1] $keep_node_re = '.*',  
 ) {
 
   if $collect_resources {
@@ -108,6 +109,7 @@ class hdp::data_processor (
     mode    => '0640',
     content => epp('hdp/hdp.yaml.epp', {
       'hdp_urls'   => Array($hdp_url, true),
+      'keep_nodes' => $keep_node_re,
     }),
     notify  => Service['pe-puppetserver'],
   }
