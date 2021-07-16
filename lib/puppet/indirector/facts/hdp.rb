@@ -11,12 +11,6 @@ class Puppet::Node::Facts::Hdp < Puppet::Node::Facts::Puppetdb
 
   include Puppet::Util::Hdp
 
-  def settings
-    return @settings if @settings
-    @settings_file = Puppet[:confdir] + "/hdp.yaml"
-    @settings = YAML.load_file(@settings_file)
-  end
-
   def save(request)
     begin
       Puppet.info "Submitting facts to HDP"
@@ -24,7 +18,7 @@ class Puppet::Node::Facts::Hdp < Puppet::Node::Facts::Puppetdb
 
       keep_nodes_re = Regexp.new(settings["keep_nodes"])
 
-      if request.instance.name.match(keep_nodes_re)
+      if keep_nodes_re.match(request.instance.name)
         hdp_urls = settings["hdp_urls"]
         hdp_urls.each do |host|
           submit_facts(host, request, current_time.utc)
