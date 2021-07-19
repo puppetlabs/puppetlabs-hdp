@@ -40,6 +40,8 @@ module Puppet::Util::Hdp
     command = Puppet::Util::Puppetdb::CharEncoding.coerce_to_utf8(command).gsub(" ", "_")
     checksum = Digest::SHA1.hexdigest(checksum_payload)
 
+    puts payload.to_json
+
     params = "checksum=#{checksum}&version=#{version}&certname=#{certname}&command=#{command}&producer-timestamp=#{producer_timestamp_utc.iso8601(3)}"
 
     url = "#{host}#{CommandsUrl}?#{params}"
@@ -84,8 +86,8 @@ module Puppet::Util::Hdp
       end
 
       payload_value
-
-      submit_command_to_hdp(host, CommandReplaceFacts, 5, request.key, current_time.clone.utc, payload)
     end
+
+    submit_command_to_hdp(host, CommandReplaceFacts, 5, request.key, current_time.clone.utc, payload)
   end
 end

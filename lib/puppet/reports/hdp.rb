@@ -24,7 +24,7 @@ Puppet::Reports.register_report(:hdp) do
     current_time = Time.now
     hdp_urls = settings["hdp_urls"]
     hdp_urls.each do |host|
-      Puppet.info 'HDP sending report to #{host}'
+      Puppet.info "HDP sending report to #{host}"
       report_hash = report_to_hash(current_time)
       submit_command_to_hdp(host, CommandStoreReport, 8, self.host, current_time.clone.utc, report_hash)
     end
