@@ -271,7 +271,7 @@ class hdp::app_stack (
         owner  => $final_hdp_user,
         group  => $final_hdp_user,
       ;
-      "/opt/puppetlabs/hdp/minio/${hdp_s3_facts_bucket}":
+      "/opt/puppetlabs/hdp/minio/data/${hdp_s3_facts_bucket}":
         ensure => directory,
         mode   => '0700',
         owner  => $final_hdp_user,

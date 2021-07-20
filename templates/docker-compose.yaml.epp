@@ -49,7 +49,7 @@ services:
       - "HDP_BACKENDS_S3_REGION=<%= $hdp_s3_region %>"
       - "HDP_BACKENDS_S3_ACCESS_KEY_ID=<%= $hdp_s3_access_key %>"
       - "HDP_BACKENDS_S3_SECRET_ACCESS_KEY=<%= $hdp_s3_secret_key %>"
-      - "HDP_BACKENDS_S3_FACTSBUCKET=<%= hdp_s3_facts_bucket %>"
+      - "HDP_BACKENDS_S3_FACTSBUCKET=<%= $hdp_s3_facts_bucket %>"
       - "HDP_BACKENDS_S3_DISABLESSL=<%= $hdp_s3_disable_ssl %>"
       - "HDP_BACKENDS_S3_S3FORCEPATHSTYLE=<%= $hdp_s3_force_path_style %>"
       - "HDP_BACKENDS_S3_ENABLED=true"
@@ -62,7 +62,7 @@ services:
       <% } %>
       - "HDP_BACKENDS_ES_ENABLED=true"
       - "HDP_BACKENDS_ES_PACKAGES=true"
-      - "HDP_BACKENDS_ES_MAXFIELDLIMIT=50000"
+      - "HDP_BACKENDS_ES_MAXFIELDLIMIT=500000"
       - "HDP_HTTP_QUERY_NO_TLS=true"
       - "HDP_SSL_DIR=/etc/puppetlabs/puppetdb/ssl"
       <% if $ca_server { %>
