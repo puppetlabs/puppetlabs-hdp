@@ -63,7 +63,7 @@ class hdp::data_processor (
   String[1] $facts_terminus = 'hdp',
   String[1] $facts_cache_terminus = 'hdp',
   String[1] $reports = 'puppetdb,hdp',
-  String[1] $keep_node_re = '.*',  
+  String[1] $keep_node_re = '.*',
 ) {
 
   if $collect_resources {
@@ -77,7 +77,7 @@ class hdp::data_processor (
       owner  => 'pe-puppet',
       group  => 'pe-puppet',
   }
-  
+
 
   if $manage_routes {
     file { '/etc/puppetlabs/hdp/hdp_routes.yaml':

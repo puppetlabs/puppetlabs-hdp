@@ -5,6 +5,20 @@
       Integer $hdp_query_port,
       Integer $hdp_ui_port,
 
+      Boolean $hdp_manage_s3,
+      String $hdp_s3_endpoint,
+      String $hdp_s3_region,
+      String $hdp_s3_access_key,
+      String $hdp_s3_secret_key,
+      String $hdp_s3_facts_bucket,
+      Boolean $hdp_s3_force_path_style,
+      Boolean $hdp_s3_disable_ssl,
+
+      Boolean $hdp_manage_es,
+      String $hdp_es_host,
+      Optional[String] $hdp_es_username,
+      Optional[String] $hdp_es_password,
+
       Optional[String] $ca_server,
       Optional[String] $ca_cert_file,
       Optional[String] $key_file,
@@ -29,6 +43,26 @@ services:
     volumes:
       - "<%= $root_dir %>/ssl:/etc/puppetlabs/puppetdb/ssl"
     environment:
+      - "GIN_MODE=release"
+      - "HDP_BUCKET_PREFIX="
+      - "HDP_BACKENDS_S3_ENDPOINT=<%= $hdp_s3_endpoint %>"
+      - "HDP_BACKENDS_S3_REGION=<%= $hdp_s3_region %>"
+      - "HDP_BACKENDS_S3_ACCESS_KEY_ID=<%= $hdp_s3_access_key %>"
+      - "HDP_BACKENDS_S3_SECRET_ACCESS_KEY=<%= $hdp_s3_secret_key %>"
+      - "HDP_BACKENDS_S3_FACTSBUCKET=<%= hdp_s3_facts_bucket %>"
+      - "HDP_BACKENDS_S3_DISABLESSL=<%= $hdp_s3_disable_ssl %>"
+      - "HDP_BACKENDS_S3_S3FORCEPATHSTYLE=<%= $hdp_s3_force_path_style %>"
+      - "HDP_BACKENDS_S3_ENABLED=true"
+      - "HDP_BACKENDS_ES_HOST=<%= $hdp_es_host %>"
+      <% if $hdp_es_username { %>
+      - "HDP_BACKENDS_ES_USERNAME=<%= $hdp_es_username %>"
+      <% } %>
+      <% if $hdp_es_password { %>
+      - "HDP_BACKENDS_ES_PASSWORD=<%= $hdp_es_password %>"
+      <% } %>
+      - "HDP_BACKENDS_ES_ENABLED=true"
+      - "HDP_BACKENDS_ES_PACKAGES=true"
+      - "HDP_BACKENDS_ES_MAXFIELDLIMIT=50000"
       - "HDP_HTTP_QUERY_NO_TLS=true"
       - "HDP_SSL_DIR=/etc/puppetlabs/puppetdb/ssl"
       <% if $ca_server { %>
@@ -46,14 +80,20 @@ services:
       - "HDP_DNSNAMES=<%= join($dns_alt_names, ',') %>"
       - "HDP_NAME=<%= $dns_name %>"
     links:
-      - elasticsearch
       - redis
+      <% if $hdp_manage_es { %>
+      - elasticsearch
+      <% } %>
+      <% if $hdp_manage_s3 { %>
+      - minio
+      <% } %>
     <% if $mount_host_certs { %>
     volumes:
       - "/etc/puppetlabs/puppet/ssl/certs/<%= $dns_name %>.pem:/etc/puppetlabs/puppetdb/ssl/data-ingestion.cert.pem:ro"
       - "/etc/puppetlabs/puppet/ssl/private_keys/<%= $dns_name %>.pem:/etc/puppetlabs/puppetdb/ssl/data-ingestion.key.pem:ro"
       - "/etc/puppetlabs/puppet/ssl/certs/ca.pem:/etc/puppetlabs/puppetdb/ssl/ca.cert.pem:ro"
     <% } %>
+<% if $hdp_manage_es { %>
   elasticsearch:
     ## TODO acwrenn - host these images ourselves, alongside data-ingestion
     image: "docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.1"
@@ -66,6 +106,20 @@ services:
       - "ES_JAVA_OPTS=-Xms<%= $max_es_memory %> -Xmx<%= $max_es_memory %>"
     volumes:
       - "<%= $root_dir %>/elastic:/usr/share/elasticsearch/data"
+<% } %>
+<% if $hdp_manage_s3 { %>
+  minio:
+    image: "minio/minio:RELEASE.2021-04-22T15-44-28Z"
+    hostname: "minio"
+    user: "<%= $hdp_user %>:<%= $hdp_user %>"
+    environment:
+      - "MINIO_ACCESS_KEY=<%= $hdp_s3_access_key %>"
+      - "MINIO_SECRET_KEY=<%= $hdp_s3_secret_key %>"
+    volumes:
+      - "<%= $root_dir %>/minio/data:/data"
+      - "<%= $root_dir %>/minio/config/.minio"
+    command: "server /data"
+<% } %>
   redis:
     user: "<%= $hdp_user %>:<%= $hdp_user %>"
     ## TODO acwrenn - same as elasticsearch. Self-host
@@ -79,4 +133,4 @@ services:
     ports:
       - "<%= $hdp_ui_port %>:80"
     environment:
-      - "REACT_APP_QUERY_SERVICE=http://<%= dns_name %>:<%= hdp_query_port %>"
+      - "REACT_APP_QUERY_SERVICE=http://<%= $dns_name %>:<%= $hdp_query_port %>"

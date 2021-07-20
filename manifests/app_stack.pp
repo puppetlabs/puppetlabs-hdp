@@ -89,6 +89,9 @@
 #   }
 #
 class hdp::app_stack (
+  String $dns_name,
+  Array[String] $dns_alt_names = [],
+
   Boolean $create_docker_group = true,
   Boolean $manage_docker = true,
   Integer $hdp_port = 9091,
@@ -105,8 +108,19 @@ class hdp::app_stack (
   Optional[String] $key_file = undef,
   Optional[String] $cert_file = undef,
 
-  String $dns_name = 'hdp.puppet',
-  Array[String] $dns_alt_names = [],
+  Boolean $hdp_manage_es = true,
+  String $hdp_es_host = 'http://elasticsearch:9200/',
+  Optional[String] $hdp_es_username = undef,
+  Optional[String] $hdp_es_password = undef,
+
+  Boolean $hdp_manage_s3 = true,
+  String $hdp_s3_endpoint = 'http://minio:9000/',
+  String $hdp_s3_region = 'hdp',
+  String $hdp_s3_access_key = 'puppet',
+  String $hdp_s3_secret_key = 'puppetpuppet',
+  String $hdp_s3_facts_bucket = 'facts',
+  Boolean $hdp_s3_force_path_style = true,
+  Boolean $hdp_s3_disable_ssl = true,
 
   String $image_prefix = 'puppet/hdp-',
   String $hdp_version = '0.0.1',
@@ -129,7 +143,6 @@ class hdp::app_stack (
       ensure  => present,
       version => $compose_version,
     }
-
   }
 
   $mount_host_certs=$trusted['certname'] == $dns_name
@@ -137,6 +150,32 @@ class hdp::app_stack (
     $final_hdp_user=String($facts['hdp_health']['puppet_user'])
   } else {
     $final_hdp_user=$hdp_user
+  }
+
+  if $hdp_manage_es {
+    $final_hdp_es_username=undef
+    $final_hdp_es_password=undef
+    $final_hdp_es_host="http://elasticsearch:9200/"
+  } else {
+    $final_hdp_es_username=$hdp_es_username
+    $final_hdp_es_password=$hdp_es_password
+    $final_hdp_es_host=$hdp_es_host
+  }
+
+  $final_hdp_s3_access_key=$hdp_s3_access_key
+  $final_hdp_s3_secret_key=$hdp_s3_secret_key
+  if $hdp_manage_s3 {
+    $final_hdp_s3_endpoint='http://minio:9000/'
+    $final_hdp_s3_region='hdp'
+    $final_hdp_s3_facts_bucket='facts'
+    $final_hdp_s3_disable_ssl=true
+    $final_hdp_s3_force_path_style=true
+  } else {
+    $final_hdp_s3_endpoint=$hdp_s3_endpoint
+    $final_hdp_s3_region=$hdp_s3_region
+    $final_hdp_s3_facts_bucket=$hdp_s3_facts_bucket
+    $final_hdp_s3_disable_ssl=$hdp_s3_disable_ssl
+    $final_hdp_s3_force_path_style=$hdp_s3_force_path_style
   }
 
   file {
@@ -158,15 +197,6 @@ class hdp::app_stack (
       owner  => $final_hdp_user,
       group  => $final_hdp_user,
     ;
-    ## Elasticsearch container FS is all 1000
-    ## While not root, this very likely crashes with something with passwordless sudo on the main host
-    ## 100% needs to change when we start deploying our own containers
-    '/opt/puppetlabs/hdp/elastic':
-      ensure => directory,
-      mode   => '0700',
-      owner  => 1000,
-      group  => 1000,
-    ;
     '/opt/puppetlabs/hdp/redis':
       ensure => directory,
       mode   => '0700',
@@ -177,25 +207,85 @@ class hdp::app_stack (
       ensure  => file,
       mode    => '0440',
       content => epp('hdp/docker-compose.yaml.epp', {
-        'hdp_version'      => $hdp_version,
-        'image_prefix'     => $image_prefix,
-        'image_repository' => $image_repository,
-        'hdp_port'         => $hdp_port,
-        'hdp_ui_port'      => $hdp_ui_port,
-        'hdp_query_port'   => $hdp_query_port,
-        'ca_server'        => $ca_server,
-        'key_file'         => $key_file,
-        'cert_file'        => $cert_file,
-        'ca_cert_file'     => $ca_cert_file,
-        'dns_name'         => $dns_name,
-        'dns_alt_names'    => $dns_alt_names,
-        'hdp_user'         => $final_hdp_user,
-        'root_dir'         => '/opt/puppetlabs/hdp',
-        'max_es_memory'    => $max_es_memory,
-        'mount_host_certs' => $mount_host_certs,
+        'hdp_version'             => $hdp_version,
+        'image_prefix'            => $image_prefix,
+        'image_repository'        => $image_repository,
+        'hdp_port'                => $hdp_port,
+        'hdp_ui_port'             => $hdp_ui_port,
+        'hdp_query_port'          => $hdp_query_port,
+
+        'hdp_manage_s3'           => $hdp_manage_s3,
+        'hdp_s3_endpoint'         => $final_hdp_s3_endpoint,
+        'hdp_s3_region'           => $final_hdp_s3_region,
+        'hdp_s3_access_key'       => $final_hdp_s3_access_key,
+        'hdp_s3_secret_key'       => $final_hdp_s3_secret_key,
+        'hdp_s3_disable_ssl'      => $final_hdp_s3_disable_ssl,
+        'hdp_s3_facts_bucket'     => $final_hdp_s3_facts_bucket,
+        'hdp_s3_force_path_style' => $final_hdp_s3_force_path_style,
+
+        'hdp_manage_es'           => $hdp_manage_es,
+        'hdp_es_host'             => $final_hdp_es_host,
+        'hdp_es_username'         => $final_hdp_es_username,
+        'hdp_es_password'         => $final_hdp_es_password,
+
+        'ca_server'               => $ca_server,
+        'key_file'                => $key_file,
+        'cert_file'               => $cert_file,
+        'ca_cert_file'            => $ca_cert_file,
+
+        'dns_name'                => $dns_name,
+        'dns_alt_names'           => $dns_alt_names,
+        'hdp_user'                => $final_hdp_user,
+        'root_dir'                => '/opt/puppetlabs/hdp',
+        'max_es_memory'           => $max_es_memory,
+        'mount_host_certs'        => $mount_host_certs,
       }),
     ;
   }
+
+  ## Elasticsearch container FS is all 1000
+  ## While not root, this very likely crashes with something with passwordless sudo on the main host
+  ## 100% needs to change when we start deploying our own containers
+  if $hdp_manage_es {
+    file {
+      '/opt/puppetlabs/hdp/elastic':
+        ensure => directory,
+        mode   => '0700',
+        owner  => 1000,
+        group  => 1000,
+      ;
+    }
+  }
+
+  if $hdp_manage_s3 {
+    file {
+      '/opt/puppetlabs/hdp/minio':
+        ensure => directory,
+        mode   => '0700',
+        owner  => $final_hdp_user,
+        group  => $final_hdp_user,
+      ;
+      '/opt/puppetlabs/hdp/minio/data':
+        ensure => directory,
+        mode   => '0700',
+        owner  => $final_hdp_user,
+        group  => $final_hdp_user,
+      ;
+      "/opt/puppetlabs/hdp/minio/${hdp_s3_facts_bucket}":
+        ensure => directory,
+        mode   => '0700',
+        owner  => $final_hdp_user,
+        group  => $final_hdp_user,
+      ;
+      '/opt/puppetlabs/hdp/minio/config':
+        ensure => directory,
+        mode   => '0700',
+        owner  => $final_hdp_user,
+        group  => $final_hdp_user,
+      ;
+    }
+  }
+
 
   docker_compose { 'hdp':
     ensure        => present,
