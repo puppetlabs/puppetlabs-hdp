@@ -158,7 +158,6 @@ services:
   ui:
     image: "<% if $image_repository { %><%= $image_repository %>/<% } %><%= $image_prefix %>ui:<%= $hdp_version %>"
     ports:
-<<<<<<< HEAD
 <%- if $ui_use_tls { %>
       - "<%= $hdp_ui_port %>:443"
 <%- } else { %> 
