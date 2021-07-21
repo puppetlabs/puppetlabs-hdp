@@ -24,10 +24,10 @@
       Optional[String] $key_file,
       Optional[String] $cert_file,
 
-      Boolean $ui_use_tls
-      Optional[String] $ui_cert_file
-      Optional[String] $ui_key_file
-      Optional[String] $ui_ca_cert_file
+      Boolean $ui_use_tls,
+      Optional[String] $ui_cert_file,
+      Optional[String] $ui_key_file,
+      Optional[String] $ui_ca_cert_file,
 
       Boolean $mount_host_certs,
 
