@@ -71,7 +71,7 @@ class hdp::data_processor (
     }
   }
 
-  file { '/etc/puppetlabs/hdp/':
+  file { '/etc/puppetlabs/hdp':
       ensure => directory,
       mode   => '0755',
       owner  => 'pe-puppet',
