@@ -148,7 +148,7 @@ services:
     ports:
 <% if $ui_use_tls { %>
       - "<%= $hdp_ui_port %>:443"
-<% else %> 
+<% } else { %> 
       - "<%= $hdp_ui_port %>80"
 <% } %>
     environment:
