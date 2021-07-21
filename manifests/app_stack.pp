@@ -17,18 +17,42 @@
 #   Port to access HDP UI
 #
 # @param [Boolean] $hdp_manage_es = true,
-# @param [String[1]] $hdp_es_host = 'http://elasticsearch:9200/',
-# @param [Optional[String[1]]] $hdp_es_username = undef,
-# @param [Optional[String[1]]] $hdp_es_password = undef,
+#   Allow this module to manage elasticsearch
+#   If true, all other es parameters are ignored
 #
-# @param [Boolean] $hdp_manage_s3 = true,
-# @param [String[1]] $hdp_s3_endpoint = 'http://minio:9000/',
-# @param [String[1]] $hdp_s3_region = 'hdp',
+# @param [String[1]] $hdp_es_host,
+#   Elasticsearch host to use
+#
+# @param [Optional[String[1]]] hdp_es_username,
+#   Username to use to connect to elasticsearch
+#
+# @param [Optional[String[1]]] hdp_es_password,
+#   Password to use to connect to elasticsearch
+#
+# @param [Boolean] $hdp_manage_s3,
+#   Allow this module to manage S3 itself. If true, 
+#   All other s3 parameters are ignored.
+#
+# @param [String[1]] $hdp_s3_endpoint
+#   The S3 Endpoint to use
+#
+# @param [String[1]] $hdp_s3_region
+#   The S3 Region to use 
+#
 # @param [String[1]] $hdp_s3_access_key = 'puppet',
-# @param [String[1]] $hdp_s3_secret_key = 'puppetpuppet',
-# @param [String[1]] $hdp_s3_facts_bucket = 'facts',
-# @param [Boolean] $hdp_s3_force_path_style = true,
-# @param [Boolean] $hdp_s3_disable_ssl = true,
+#   The S3 Access Key to use
+#
+# @param [String[1]] $hdp_s3_secret_key,
+#   The S3 Secret Key to use
+#
+# @param [String[1]] $hdp_s3_facts_bucket,
+#   The S3 Bucket to use for facts
+#
+# @param [Boolean] $hdp_s3_force_path_style,
+#   Disable AWS specific S3 Path Style
+#
+# @param [Boolean] $hdp_s3_disable_ssl,
+#   Disable SSL for the S3 backend 
 #
 # @param [String] hdp_user
 #   User to run HDP + all infra services as. Also owns mounted volumes
@@ -65,6 +89,22 @@
 # @param [Optional[String]] cert_file
 #   Puppet PKI cert file - pem encoded.
 #   This or ca_server can be specified
+#
+# @param [Boolean] ui_use_tls
+#   Use TLS for the UI and HDP Query endpoints
+#
+# @param [Optional[String]] ui_key_file
+#   Key file to use for UI - pem encoded.
+#   Your browser should trust this you set ui_use_tls
+#   
+# @param [Optional[String]] ui_cert_file
+#   Cert file to use for UI - pem encoded.
+#   Your browser should trust this you set ui_use_tls
+#
+# @param [Optional[String]] ui_ca_cert_file
+#   CA Cert file to use for UI - pem encoded.
+#   Your browser should have key to access this if you want to set it
+#   Set this to not undef to protect this endpoint.
 #
 # @param [String[1]] dns_name
 #   Name that puppet server will find HDP at.
@@ -120,6 +160,12 @@ class hdp::app_stack (
   Optional[String[1]] $ca_cert_file = undef,
   Optional[String[1]] $key_file = undef,
   Optional[String[1]] $cert_file = undef,
+
+
+  Boolean $ui_use_tls = false,
+  Optional[String[1]] $ui_ca_cert_file = undef,
+  Optional[String[1]] $ui_key_file = undef,
+  Optional[String[1]] $ui_cert_file = undef,
 
   Boolean $hdp_manage_es = true,
   String[1] $hdp_es_host = 'http://elasticsearch:9200/',
@@ -245,6 +291,11 @@ class hdp::app_stack (
         'key_file'                => $key_file,
         'cert_file'               => $cert_file,
         'ca_cert_file'            => $ca_cert_file,
+
+        'ui_use_tls'              => $ui_use_tls,
+        'ui_key_file'             => $ui_key_file,
+        'ui_cert_file'            => $ui_cert_file,
+        'ui_ca_cert_file'         => $ui_ca_cert_file,
 
         'dns_name'                => $dns_name,
         'dns_alt_names'           => $dns_alt_names,

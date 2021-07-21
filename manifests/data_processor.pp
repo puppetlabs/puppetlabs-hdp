@@ -71,7 +71,7 @@ class hdp::data_processor (
     }
   }
 
-  file { '/etc/puppetlabs/hdp/':
+  file { '/etc/puppetlabs/hdp':
       ensure => directory,
       mode   => '0755',
       owner  => 'pe-puppet',
@@ -91,6 +91,7 @@ class hdp::data_processor (
       }),
       notify  => Service['pe-puppetserver'],
     }
+
     ini_setting { 'enable hdp_routes.yaml':
       ensure  => present,
       path    => '/etc/puppetlabs/puppet/puppet.conf',
