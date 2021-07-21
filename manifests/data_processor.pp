@@ -91,6 +91,7 @@ class hdp::data_processor (
       }),
       notify  => Service['pe-puppetserver'],
     }
+
     ini_setting { 'enable hdp_routes.yaml':
       ensure  => present,
       path    => '/etc/puppetlabs/puppet/puppet.conf',
