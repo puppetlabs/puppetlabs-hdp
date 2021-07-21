@@ -158,6 +158,7 @@ services:
   ui:
     image: "<% if $image_repository { %><%= $image_repository %>/<% } %><%= $image_prefix %>ui:<%= $hdp_version %>"
     ports:
+<<<<<<< HEAD
 <%- if $ui_use_tls { %>
       - "<%= $hdp_ui_port %>:443"
 <%- } else { %> 
@@ -168,7 +169,6 @@ services:
       - "REACT_APP_QUERY_SERVICE=https://<%= $dns_name %>:<%= $hdp_query_port %>"
 <%- } else { %> 
       - "REACT_APP_QUERY_SERVICE=http://<%= $dns_name %>:<%= $hdp_query_port %>"
-<<<<<<< HEAD
 <%- } %>
       - "HDP_ENABLE_TLS=<%= $ui_use_tls %>"
 <%- if $ui_use_tls { %>
@@ -176,11 +176,3 @@ services:
       - "<%= $ui_key_file %>:/etc/ssl/key.pem:ro"
       - "<%= $ui_cert_file %>:/etc/ssl/cert.pem:ro"
 <%- } %>
-=======
-      - "HDP_USE_TLS=<%= $ui_use_tls %>"
-<% if $ui_use_tls { %>
-    volumes:
-      - "<%= $ui_key_file %>:/etc/ssl/key.pem:ro"
-      - "<%= $ui_cert_file %>:/etc/ssl/cert.pem:ro"
-<% } %>
->>>>>>> 7b5d20f... Enable UI TLS
