@@ -1,7 +1,7 @@
 
 # hdp
 
-This module will help you setup HDP's report processor on a PE Master or Compiler. It will also help you setup a node to host the HDP application stack.
+This module will help you setup HDP's report processor on a PE Primary or Compiler. It will also help you setup a node to host the HDP application stack.
 
 - [Description](#description)
 - [Setup](#setup)
@@ -34,7 +34,8 @@ See [REFERENCE.md](REFERENCE.md) for example usage.
 
 ## Reference
 
-A custom fact named `hdp` is included as part of this module. It is a structured fact that returns information about the currently running instance of HDP.
+A custom fact named `hdp-health` is included as part of this module. It is a structured fact that returns information about the currently running instance of HDP.
+Also, if this module is installed on a node, an `hdp` fact is included that will collect unmanaged resource information, but not land in PuppetDB.
 
 This module is documented via `pdk bundle exec puppet strings generate --format markdown`. Please see [REFERENCE.md](REFERENCE.md) for more info.
 
