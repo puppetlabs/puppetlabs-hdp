@@ -68,6 +68,7 @@ services:
       - "HDP_BACKENDS_ES_ENABLED=true"
       - "HDP_BACKENDS_ES_PACKAGES=true"
       - "HDP_BACKENDS_ES_MAXFIELDLIMIT=500000"
+<<<<<<< HEAD
       - "HDP_SSL_DIR=/etc/puppetlabs/puppet/ssl"
       <%- if $ca_server { %>
       - "HDP_CASERVER=<%= $ca_server %>"
@@ -167,6 +168,7 @@ services:
       - "REACT_APP_QUERY_SERVICE=https://<%= $dns_name %>:<%= $hdp_query_port %>"
 <%- } else { %> 
       - "REACT_APP_QUERY_SERVICE=http://<%= $dns_name %>:<%= $hdp_query_port %>"
+<<<<<<< HEAD
 <%- } %>
       - "HDP_ENABLE_TLS=<%= $ui_use_tls %>"
 <%- if $ui_use_tls { %>
@@ -174,3 +176,11 @@ services:
       - "<%= $ui_key_file %>:/etc/ssl/key.pem:ro"
       - "<%= $ui_cert_file %>:/etc/ssl/cert.pem:ro"
 <%- } %>
+=======
+      - "HDP_USE_TLS=<%= $ui_use_tls %>"
+<% if $ui_use_tls { %>
+    volumes:
+      - "<%= $ui_key_file %>:/etc/ssl/key.pem:ro"
+      - "<%= $ui_cert_file %>:/etc/ssl/cert.pem:ro"
+<% } %>
+>>>>>>> 7b5d20f... Enable UI TLS
