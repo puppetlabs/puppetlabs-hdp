@@ -152,7 +152,11 @@ services:
       - "<%= $hdp_ui_port %>80"
 <% } %>
     environment:
+<% if $ui_use_tls { %>
+      - "REACT_APP_QUERY_SERVICE=https://<%= $dns_name %>:<%= $hdp_query_port %>"
+<% } else { %> 
       - "REACT_APP_QUERY_SERVICE=http://<%= $dns_name %>:<%= $hdp_query_port %>"
+<% } %>
       - "HDP_ENABLE_TLS=<%= $ui_use_tls %>"
 <% if $ui_use_tls { %>
     volumes:
