@@ -19,9 +19,26 @@
 #   Port to access HDP UI
 #   defaults to 80
 #
+# @param Boolean $hdp_manage_es = true,
+# @param String $hdp_es_host = 'http://elasticsearch:9200/',
+# @param Optional[String] $hdp_es_username = undef,
+# @param Optional[String] $hdp_es_password = undef,
+#
+#
+# @param Boolean $hdp_manage_s3 = true,
+# @param String $hdp_s3_endpoint = 'http://minio:9000/',
+# @param String $hdp_s3_region = 'hdp',
+# @param String $hdp_s3_access_key = 'puppet',
+# @param String $hdp_s3_secret_key = 'puppetpuppet',
+# @param String $hdp_s3_facts_bucket = 'facts',
+# @param Boolean $hdp_s3_force_path_style = true,
+# @param Boolean $hdp_s3_disable_ssl = true,
+#
 # @param String hdp_user
 #   User to run HDP + all infra services as. Also owns mounted volumes
 #   Set to Puppet if certname == dns_name
+#
+# @param String hdp_user
 #   
 # @param String compose_version
 #   The version of docker-compose to install
