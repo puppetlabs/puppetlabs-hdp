@@ -76,10 +76,10 @@ services:
       - "HDP_HTTP_UPLOAD_CACERTFILE=<%= $ca_cert_file %>"
       <% } %>
       <% if $key_file { %>
-      - "HDP_HTTP_UPLOAD_KEYFILE=<%= $key_file%>"
+      - "HDP_HTTP_UPLOAD_KEY_FILE=<%= $key_file%>"
       <% } %>
       <% if $cert_file { %>
-      - "HDP_HTTP_UPLOAD_CERTFILE=<%= $cert_file%>"
+      - "HDP_HTTP_UPLOAD_CERT_FILE=<%= $cert_file%>"
       <% } %>
       - "HDP_DNSNAMES=<%= join($dns_alt_names, ',') %>"
       - "HDP_NAME=<%= $dns_name %>"
