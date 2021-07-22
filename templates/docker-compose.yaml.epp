@@ -90,10 +90,10 @@ services:
       <% } %>
       - "HDP_HTTP_QUERY_NO_TLS=<%= !$ui_use_tls %>"
       <% if $ui_key_file { %>
-      - "HDP_HTTP_QUERY_KEYFILE=<%= $ui_key_file %>"
+      - "HDP_HTTP_QUERY_KEY_FILE=<%= $ui_key_file %>"
       <% } %>
       <% if $ui_cert_file { %>
-      - "HDP_HTTP_QUERY_CERTFILE=<%= $ui_cert_file %>"
+      - "HDP_HTTP_QUERY_CERT_FILE=<%= $ui_cert_file %>"
       <% } %>
     links:
       - redis
