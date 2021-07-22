@@ -45,8 +45,6 @@ services:
     ports:
       - "<%= $hdp_port %>:9091"
       - "<%= $hdp_query_port %>:8080"
-    volumes:
-      - "<%= $root_dir %>/ssl:/etc/puppetlabs/puppetdb/ssl"
     environment:
       - "GIN_MODE=release"
       - "HDP_BUCKET_PREFIX="
@@ -104,7 +102,7 @@ services:
       - minio
       <% } %>
     volumes:
-      - "/opt/puppetlabs/hdp/hdp:/etc/hdp" ## Here so we have at least one mount
+      - "<%= $root_dir %>/ssl:/etc/puppetlabs/puppet/ssl"
 <% if $mount_host_certs { %>
       - "/etc/puppetlabs/puppet/ssl/certs/<%= $dns_name %>.pem:/etc/puppetlabs/puppetdb/ssl/data-ingestion.cert.pem:ro"
       - "/etc/puppetlabs/puppet/ssl/private_keys/<%= $dns_name %>.pem:/etc/puppetlabs/puppetdb/ssl/data-ingestion.key.pem:ro"
