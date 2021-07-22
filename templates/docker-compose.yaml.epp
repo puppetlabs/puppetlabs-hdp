@@ -68,7 +68,6 @@ services:
       - "HDP_BACKENDS_ES_ENABLED=true"
       - "HDP_BACKENDS_ES_PACKAGES=true"
       - "HDP_BACKENDS_ES_MAXFIELDLIMIT=500000"
-<<<<<<< HEAD
       - "HDP_SSL_DIR=/etc/puppetlabs/puppet/ssl"
       <%- if $ca_server { %>
       - "HDP_CASERVER=<%= $ca_server %>"
