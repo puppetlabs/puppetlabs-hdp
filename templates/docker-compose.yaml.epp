@@ -86,8 +86,9 @@ services:
       - "HDP_HTTP_QUERY_NO_TLS=<%= $ui_use_tls %>"
       <% if $ui_ca_cert_file { %>
       - "HDP_HTTP_QUERY_CACERTFILE=<%= $ui_ca_cert_file %>"
-      - "HDP_HTTP_QUERY_DISABLECLIENTAUTH=false"
+      - "HDP_HTTP_QUERY_DISABLE_CLIENT_AUTH=false"
       <% } %>
+      - "HDP_HTTP_QUERY_NO_TLS=<%= !$ui_use_tls %>"
       <% if $ui_key_file { %>
       - "HDP_HTTP_QUERY_KEYFILE=<%= $ui_key_file %>"
       <% } %>
