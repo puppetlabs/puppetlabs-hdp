@@ -104,21 +104,21 @@ services:
       - minio
       <% } %>
     volumes:
-    <% if $mount_host_certs { %>
+      - "/opt/puppetlabs/hdp/hdp:/etc/hdp" ## Here so we have at least one mount
+<% if $mount_host_certs { %>
       - "/etc/puppetlabs/puppet/ssl/certs/<%= $dns_name %>.pem:/etc/puppetlabs/puppetdb/ssl/data-ingestion.cert.pem:ro"
       - "/etc/puppetlabs/puppet/ssl/private_keys/<%= $dns_name %>.pem:/etc/puppetlabs/puppetdb/ssl/data-ingestion.key.pem:ro"
       - "/etc/puppetlabs/puppet/ssl/certs/ca.pem:/etc/puppetlabs/puppetdb/ssl/ca.cert.pem:ro"
-    <% } %>
-    <% if $ui_key_file { %>
+<% } %>
+<% if $ui_key_file { %>
       - "<%= $ui_key_file %>:<%= $ui_key_file %>:ro"
-    <% } %>
-    <% if $ui_cert_file { %>
+<% } %>
+<% if $ui_cert_file { %>
       - "<%= $ui_cert_file %>:<%= $ui_cert_file %>:ro"
-    <% } %>
-    <% if $ui_ca_cert_file { %>
+<% } %>
+<% if $ui_ca_cert_file { %>
       - "<%= $ui_ca_cert_file %>:<%= $ui_ca_cert_file %>:ro"
-    <% } %>
-      - "/opt/puppetlabs/hdp/hdp:/etc/hdp" ## Here so we have at least one mount
+<% } %>
 <% if $hdp_manage_es { %>
   elasticsearch:
     ## TODO acwrenn - host these images ourselves, alongside data-ingestion
