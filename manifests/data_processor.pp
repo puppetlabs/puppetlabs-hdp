@@ -3,7 +3,11 @@
 # @summary Simple class to enable the HDP data processor
 #
 # @param [HDP::Url] hdp_url
-#   The url to send reports to.
+#   The url to send data to.
+#
+# @param [Array[HDP::Url]] extra_hdp_urls
+#   Extra HDP urls to send data to.
+#   Most common use case is 1 hdp.
 #
 # @param [Boolean] enable_reports
 #   Enable sending reports to HDP
@@ -57,6 +61,7 @@
 #
 class hdp::data_processor (
   HDP::Url $hdp_url,
+  Array[HDP::Url] $extra_hdp_urls = [],
   Boolean $enable_reports = true,
   Boolean $manage_routes = true,
   Boolean $collect_resources = true,
@@ -109,7 +114,7 @@ class hdp::data_processor (
     group   => pe-puppet,
     mode    => '0640',
     content => epp('hdp/hdp.yaml.epp', {
-      'hdp_urls'   => Array($hdp_url, true),
+      'hdp_urls'   => Array($hdp_url, true) + $extra_hdp_urls,
       'keep_nodes' => $keep_node_re,
     }),
     notify  => Service['pe-puppetserver'],
