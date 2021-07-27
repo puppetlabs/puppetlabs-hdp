@@ -56,6 +56,8 @@ services:
       - "HDP_BACKENDS_S3_DISABLESSL=<%= $hdp_s3_disable_ssl %>"
       - "HDP_BACKENDS_S3_S3FORCEPATHSTYLE=<%= $hdp_s3_force_path_style %>"
       - "HDP_BACKENDS_S3_ENABLED=true"
+      - "HDP_KV_ENABLED=true"
+      - "HDP_KV_HOST=redis:6379"
       - "HDP_BACKENDS_ES_HOST=<%= $hdp_es_host %>"
       <%- if $hdp_es_username { %>
       - "HDP_BACKENDS_ES_USERNAME=<%= $hdp_es_username %>"
