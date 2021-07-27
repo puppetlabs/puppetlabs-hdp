@@ -56,68 +56,70 @@ services:
       - "HDP_BACKENDS_S3_DISABLESSL=<%= $hdp_s3_disable_ssl %>"
       - "HDP_BACKENDS_S3_S3FORCEPATHSTYLE=<%= $hdp_s3_force_path_style %>"
       - "HDP_BACKENDS_S3_ENABLED=true"
+      - "HDP_KV_ENABLED=true"
+      - "HDP_KV_HOST=redis:6379"
       - "HDP_BACKENDS_ES_HOST=<%= $hdp_es_host %>"
-      <% if $hdp_es_username { %>
+      <%- if $hdp_es_username { %>
       - "HDP_BACKENDS_ES_USERNAME=<%= $hdp_es_username %>"
-      <% } %>
-      <% if $hdp_es_password { %>
+      <%- } %>
+      <%- if $hdp_es_password { %>
       - "HDP_BACKENDS_ES_PASSWORD=<%= $hdp_es_password %>"
-      <% } %>
+      <%- } %>
       - "HDP_BACKENDS_ES_ENABLED=true"
       - "HDP_BACKENDS_ES_PACKAGES=true"
       - "HDP_BACKENDS_ES_MAXFIELDLIMIT=500000"
-      - "HDP_SSL_DIR=/etc/puppetlabs/puppetdb/ssl"
-      <% if $ca_server { %>
+      - "HDP_SSL_DIR=/etc/puppetlabs/puppet/ssl"
+      <%- if $ca_server { %>
       - "HDP_CASERVER=<%= $ca_server %>"
-      <% } %>
-      <% if $ca_cert_file { %>
+      <%- } %>
+      <%- if $ca_cert_file { %>
       - "HDP_HTTP_UPLOAD_CACERTFILE=<%= $ca_cert_file %>"
-      <% } %>
-      <% if $key_file { %>
+      <%- } %>
+      <%- if $key_file { %>
       - "HDP_HTTP_UPLOAD_KEY_FILE=<%= $key_file%>"
-      <% } %>
-      <% if $cert_file { %>
+      <%- } %>
+      <%- if $cert_file { %>
       - "HDP_HTTP_UPLOAD_CERT_FILE=<%= $cert_file%>"
-      <% } %>
+      <%- } %>
       - "HDP_DNSNAMES=<%= join($dns_alt_names, ',') %>"
       - "HDP_NAME=<%= $dns_name %>"
       - "HDP_HTTP_QUERY_NO_TLS=<%= $ui_use_tls %>"
-      <% if $ui_ca_cert_file { %>
+      <%- if $ui_ca_cert_file { %>
       - "HDP_HTTP_QUERY_CACERTFILE=<%= $ui_ca_cert_file %>"
       - "HDP_HTTP_QUERY_DISABLE_CLIENT_AUTH=false"
-      <% } %>
+      <%- } %>
       - "HDP_HTTP_QUERY_NO_TLS=<%= !$ui_use_tls %>"
-      <% if $ui_key_file { %>
+      <%- if $ui_key_file { %>
       - "HDP_HTTP_QUERY_KEY_FILE=<%= $ui_key_file %>"
-      <% } %>
-      <% if $ui_cert_file { %>
+      <%- } %>
+      <%- if $ui_cert_file { %>
       - "HDP_HTTP_QUERY_CERT_FILE=<%= $ui_cert_file %>"
-      <% } %>
+      <%- } %>
     links:
       - redis
-      <% if $hdp_manage_es { %>
+      <%- if $hdp_manage_es { %>
       - elasticsearch
-      <% } %>
-      <% if $hdp_manage_s3 { %>
+      <%- } %>
+      <%- if $hdp_manage_s3 { %>
       - minio
-      <% } %>
+      <%- } %>
     volumes:
       - "<%= $root_dir %>/ssl:/etc/puppetlabs/puppet/ssl"
-<% if $mount_host_certs { %>
-      - "/etc/puppetlabs/puppet/ssl/certs/<%= $dns_name %>.pem:/etc/puppetlabs/puppetdb/ssl/data-ingestion.cert.pem:ro"
-      - "/etc/puppetlabs/puppet/ssl/private_keys/<%= $dns_name %>.pem:/etc/puppetlabs/puppetdb/ssl/data-ingestion.key.pem:ro"
-      - "/etc/puppetlabs/puppet/ssl/certs/ca.pem:/etc/puppetlabs/puppetdb/ssl/ca.cert.pem:ro"
-<% } %>
-<% if $ui_key_file { %>
+<%- if $mount_host_certs { %>
+      - "/etc/puppetlabs/puppet/ssl/certs/<%= $dns_name %>.pem:/etc/puppetlabs/puppet/ssl/data-ingestion.cert.pem:ro"
+      - "/etc/puppetlabs/puppet/ssl/private_keys/<%= $dns_name %>.pem:/etc/puppetlabs/puppet/ssl/data-ingestion.key.pem:ro"
+      - "/etc/puppetlabs/puppet/ssl/certs/ca.pem:/etc/puppetlabs/puppet/ssl/ca.cert.pem:ro"
+<%- } %>
+<%- if $ui_key_file { %>
       - "<%= $ui_key_file %>:<%= $ui_key_file %>:ro"
-<% } %>
-<% if $ui_cert_file { %>
+<%- } %>
+<%- if $ui_cert_file { %>
       - "<%= $ui_cert_file %>:<%= $ui_cert_file %>:ro"
-<% } %>
-<% if $ui_ca_cert_file { %>
+<%- } %>
+<%- if $ui_ca_cert_file { %>
       - "<%= $ui_ca_cert_file %>:<%= $ui_ca_cert_file %>:ro"
-<% } %>
-<% if $hdp_manage_es { %>
+<%- } %>
+<%- if $hdp_manage_es { %>
   elasticsearch:
     ## TODO acwrenn - host these images ourselves, alongside data-ingestion
     image: "docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.1"
@@ -130,8 +132,8 @@ services:
       - "ES_JAVA_OPTS=-Xms<%= $max_es_memory %> -Xmx<%= $max_es_memory %>"
     volumes:
       - "<%= $root_dir %>/elastic:/usr/share/elasticsearch/data"
-<% } %>
-<% if $hdp_manage_s3 { %>
+<%- } %>
+<%- if $hdp_manage_s3 { %>
   minio:
     image: "minio/minio:RELEASE.2021-04-22T15-44-28Z"
     hostname: "minio"
@@ -143,7 +145,7 @@ services:
       - "<%= $root_dir %>/minio/data:/data"
       - "<%= $root_dir %>/minio/config/.minio"
     command: "server /data"
-<% } %>
+<%- } %>
   redis:
     user: "<%= $hdp_user %>:<%= $hdp_user %>"
     ## TODO acwrenn - same as elasticsearch. Self-host
@@ -155,20 +157,20 @@ services:
   ui:
     image: "<% if $image_repository { %><%= $image_repository %>/<% } %><%= $image_prefix %>ui:<%= $hdp_version %>"
     ports:
-<% if $ui_use_tls { %>
+<%- if $ui_use_tls { %>
       - "<%= $hdp_ui_port %>:443"
-<% } else { %> 
+<%- } else { %> 
       - "<%= $hdp_ui_port %>80"
-<% } %>
+<%- } %>
     environment:
-<% if $ui_use_tls { %>
+<%- if $ui_use_tls { %>
       - "REACT_APP_QUERY_SERVICE=https://<%= $dns_name %>:<%= $hdp_query_port %>"
-<% } else { %> 
+<%- } else { %> 
       - "REACT_APP_QUERY_SERVICE=http://<%= $dns_name %>:<%= $hdp_query_port %>"
-<% } %>
+<%- } %>
       - "HDP_ENABLE_TLS=<%= $ui_use_tls %>"
-<% if $ui_use_tls { %>
+<%- if $ui_use_tls { %>
     volumes:
       - "<%= $ui_key_file %>:/etc/ssl/key.pem:ro"
       - "<%= $ui_cert_file %>:/etc/ssl/cert.pem:ro"
-<% } %>
+<%- } %>
