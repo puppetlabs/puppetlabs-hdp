@@ -188,17 +188,19 @@ class hdp::app_stack (
   Optional[Array[String[1]]] $docker_users = undef,
 ){
   if $create_docker_group {
-    ensure_resource('group', 'docker', {'ensure' => 'present' })
+    ensure_resource('group', 'docker', {'ensure' => 'present'})
   }
 
-  class { 'docker':
-    docker_users => $docker_users,
-    log_driver   => $log_driver,
-  }
+  if $manage_docker {
+    class { 'docker':
+      docker_users => $docker_users,
+      log_driver   => $log_driver,
+    }
 
-  class { 'docker::compose':
-    ensure  => present,
-    version => $compose_version,
+    class { 'docker::compose':
+      ensure  => present,
+      version => $compose_version,
+    }
   }
 
   $mount_host_certs=$trusted['certname'] == $dns_name
