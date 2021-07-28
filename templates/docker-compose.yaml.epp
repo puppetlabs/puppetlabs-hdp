@@ -154,23 +154,29 @@ services:
     volumes:
       - "<%= $root_dir %>/redis:/data"
     command: "redis-server --appendonly yes"
-  ui:
-    image: "<% if $image_repository { %><%= $image_repository %>/<% } %><%= $image_prefix %>ui:<%= $hdp_version %>"
+  ui-frontend:
+    image: "<% if $image_repository { %><%= $image_repository %>/<% } %><%= $image_prefix %>ui-frontend:<%= $hdp_version %>"
     ports:
 <%- if $ui_use_tls { %>
       - "<%= $hdp_ui_port %>:443"
-<%- } else { %> 
-      - "<%= $hdp_ui_port %>80"
+<%- } else { %>
+      - "<%= $hdp_ui_port %>:80"
 <%- } %>
-    environment:
-<%- if $ui_use_tls { %>
-      - "REACT_APP_QUERY_SERVICE=https://<%= $dns_name %>:<%= $hdp_query_port %>"
-<%- } else { %> 
-      - "REACT_APP_QUERY_SERVICE=http://<%= $dns_name %>:<%= $hdp_query_port %>"
-<%- } %>
+    environment::
       - "HDP_ENABLE_TLS=<%= $ui_use_tls %>"
+      - "UI_HOST=ui"
+      - "UI_PORT=3000"
 <%- if $ui_use_tls { %>
     volumes:
       - "<%= $ui_key_file %>:/etc/ssl/key.pem:ro"
       - "<%= $ui_cert_file %>:/etc/ssl/cert.pem:ro"
+<%- } %>
+  ui:
+    image: "<% if $image_repository { %><%= $image_repository %>/<% } %><%= $image_prefix %>ui:<%= $hdp_version %>"
+    environment:
+      - "PORT=3000"
+<%- if $ui_use_tls { %>
+      - "REACT_APP_QUERY_SERVICE=https://<%= $dns_name %>:<%= $hdp_query_port %>"
+<%- } else { %> 
+      - "REACT_APP_QUERY_SERVICE=http://<%= $dns_name %>:<%= $hdp_query_port %>"
 <%- } %>

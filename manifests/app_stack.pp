@@ -188,11 +188,10 @@ class hdp::app_stack (
   Optional[Array[String[1]]] $docker_users = undef,
 ){
   if $create_docker_group {
-    ensure_resource('group', 'docker', {'ensure' => 'present' })
+    ensure_resource('group', 'docker', {'ensure' => 'present'})
   }
 
   if $manage_docker {
-
     class { 'docker':
       docker_users => $docker_users,
       log_driver   => $log_driver,
@@ -242,7 +241,6 @@ class hdp::app_stack (
       owner   => 'root',
       group   => 'docker',
       require => Group['docker'],
-      before  => Docker_compose['hdp'],
     ;
     '/opt/puppetlabs/hdp':
       ensure => directory,
