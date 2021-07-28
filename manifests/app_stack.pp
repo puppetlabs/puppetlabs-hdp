@@ -191,7 +191,7 @@ class hdp::app_stack (
     ensure_resource('group', 'docker', {'ensure' => 'present' })
   }
 
-  notify($manage_docker)
+  alert($manage_docker)
   if $manage_docker {
 
     class { 'docker':
