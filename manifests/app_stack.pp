@@ -150,7 +150,7 @@ class hdp::app_stack (
   Optional[Array[String[1]]] $docker_users = undef,
   Integer $hdp_port = 9091,
   Integer $hdp_ui_port = 80,
-  Integer $hdp_query_port = 8080,
+  Integer $hdp_query_port = 9092,
   String[1] $hdp_user = '11223',
   String[1] $compose_version = '1.25.0',
   Optional[String[1]] $image_repository = undef,
