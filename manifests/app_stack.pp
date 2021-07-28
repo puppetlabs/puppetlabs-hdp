@@ -242,7 +242,7 @@ class hdp::app_stack (
       owner   => 'root',
       group   => 'docker',
       require => Group['docker'],
-      before  => Class['docker_compose']['hdp'],
+      before  => Docker_compose['hdp'],
     ;
     '/opt/puppetlabs/hdp':
       ensure => directory,
