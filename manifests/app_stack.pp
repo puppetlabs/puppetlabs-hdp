@@ -111,7 +111,7 @@
 #   Should match the names in cert_file if provided.
 #   If ca_server is used instead, this name will be used as certname.
 #
-# @param [String[1]] dns_alt_names
+# @param [Array[String[1]]] dns_alt_names
 #   Extra dns names attached to the puppet cert, can be used to bypass certname collisions
 #
 # @param [String[1]] hdp_version
@@ -147,9 +147,10 @@ class hdp::app_stack (
 
   Boolean $create_docker_group = true,
   Boolean $manage_docker = true,
+  Optional[Array[String[1]]] $docker_users = undef,
   Integer $hdp_port = 9091,
   Integer $hdp_ui_port = 80,
-  Integer $hdp_query_port = 8080,
+  Integer $hdp_query_port = 9092,
   String[1] $hdp_user = '11223',
   String[1] $compose_version = '1.25.0',
   Optional[String[1]] $image_repository = undef,
@@ -185,7 +186,6 @@ class hdp::app_stack (
   String[1] $hdp_version = '0.0.1',
   String[1] $log_driver = 'journald',
   String[1] $max_es_memory = '4G',
-  Optional[Array[String[1]]] $docker_users = undef,
 ){
   if $create_docker_group {
     ensure_resource('group', 'docker', {'ensure' => 'present'})
@@ -205,7 +205,7 @@ class hdp::app_stack (
 
   $mount_host_certs=$trusted['certname'] == $dns_name
   if $mount_host_certs {
-    $_final_hdp_user=String($facts['hdp_health']['puppet_user'])
+    $_final_hdp_user=String[1]($facts['hdp_health']['puppet_user'])
   } else {
     $_final_hdp_user=$hdp_user
   }

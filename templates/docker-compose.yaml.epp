@@ -162,7 +162,7 @@ services:
 <%- } else { %>
       - "<%= $hdp_ui_port %>:80"
 <%- } %>
-    environment::
+    environment:
       - "HDP_ENABLE_TLS=<%= $ui_use_tls %>"
       - "UI_HOST=ui"
       - "UI_PORT=3000"
