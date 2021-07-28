@@ -191,18 +191,14 @@ class hdp::app_stack (
     ensure_resource('group', 'docker', {'ensure' => 'present' })
   }
 
-  alert($manage_docker)
-  if $manage_docker {
+  class { 'docker':
+    docker_users => $docker_users,
+    log_driver   => $log_driver,
+  }
 
-    class { 'docker':
-      docker_users => $docker_users,
-      log_driver   => $log_driver,
-    }
-
-    class { 'docker::compose':
-      ensure  => present,
-      version => $compose_version,
-    }
+  class { 'docker::compose':
+    ensure  => present,
+    version => $compose_version,
   }
 
   $mount_host_certs=$trusted['certname'] == $dns_name
@@ -243,7 +239,6 @@ class hdp::app_stack (
       owner   => 'root',
       group   => 'docker',
       require => Group['docker'],
-      before  => Docker_compose['hdp'],
     ;
     '/opt/puppetlabs/hdp':
       ensure => directory,
