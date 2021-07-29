@@ -13,7 +13,7 @@
 # @param [Integer] hdp_query_port
 #   Port to access HDP query service
 #
-# @param [Integer] hdp_ui port
+# @param [Integer] hdp_ui_port
 #   Port to access HDP UI
 #
 # @param [Boolean] $hdp_manage_es = true,
@@ -57,8 +57,6 @@
 # @param [String] hdp_user
 #   User to run HDP + all infra services as. Also owns mounted volumes
 #   Set to Puppet if certname == dns_name
-#
-# @param [String] hdp_user
 #   
 # @param [String] compose_version
 #   The version of docker-compose to install
@@ -117,9 +115,6 @@
 # @param [String[1]] hdp_version
 #   The version of the HDP containers to use
 #
-# @param [String[1]] hdp_version
-#   The version of the HDP containers to use
-#
 # @param [String[1]] log_driver
 #   The log driver Docker will use
 #
@@ -129,6 +124,30 @@
 # @param [String[1]] max_es_memory
 #   Max memory for ES to use - in JVM -Xmx{$max_es_memory} format.
 #   Example: 4G, 1024M. Defaults to 4G.
+#
+# @param hdp_manage_es
+#
+# @param hdp_es_host
+#
+# @param hdp_es_username
+#
+# @param hdp_es_password
+#
+# @param hdp_manage_s3
+#
+# @param hdp_s3_endpoint
+#
+# @param hdp_s3_region
+#
+# @param hdp_s3_access_key
+#
+# @param hdp_s3_secret_key
+#
+# @param hdp_s3_facts_bucket
+#
+# @param hdp_s3_force_path_style
+#
+# @param hdp_s3_disable_ssl
 #
 # @example Use defalts or configure via Hiera
 #   include hdp::app_stack
@@ -162,7 +181,6 @@ class hdp::app_stack (
   Optional[String[1]] $key_file = undef,
   Optional[String[1]] $cert_file = undef,
 
-
   Boolean $ui_use_tls = false,
   Optional[String[1]] $ui_ca_cert_file = undef,
   Optional[String[1]] $ui_key_file = undef,
@@ -186,9 +204,9 @@ class hdp::app_stack (
   String[1] $hdp_version = '0.0.1',
   String[1] $log_driver = 'journald',
   String[1] $max_es_memory = '4G',
-){
+) {
   if $create_docker_group {
-    ensure_resource('group', 'docker', {'ensure' => 'present'})
+    ensure_resource('group', 'docker', { 'ensure' => 'present' })
   }
 
   if $manage_docker {
@@ -205,19 +223,19 @@ class hdp::app_stack (
 
   $mount_host_certs=$trusted['certname'] == $dns_name
   if $mount_host_certs {
-    $_final_hdp_user=String[1]($facts['hdp_health']['puppet_user'])
+    $_final_hdp_user = validate_string($facts['hdp_health']['puppet_user'])
   } else {
-    $_final_hdp_user=$hdp_user
+    $_final_hdp_user = $hdp_user
   }
 
   if $hdp_manage_es {
-    $_final_hdp_es_username=undef
-    $_final_hdp_es_password=undef
-    $_final_hdp_es_host="http://elasticsearch:9200/"
+    $_final_hdp_es_username = undef
+    $_final_hdp_es_password = undef
+    $_final_hdp_es_host = 'http://elasticsearch:9200/'
   } else {
-    $_final_hdp_es_username=$hdp_es_username
-    $_final_hdp_es_password=$hdp_es_password
-    $_final_hdp_es_host=$hdp_es_host
+    $_final_hdp_es_username = $hdp_es_username
+    $_final_hdp_es_password = $hdp_es_password
+    $_final_hdp_es_host = $hdp_es_host
   }
 
   $_final_hdp_s3_access_key=$hdp_s3_access_key
@@ -241,68 +259,68 @@ class hdp::app_stack (
       owner   => 'root',
       group   => 'docker',
       require => Group['docker'],
-    ;
+      ;
     '/opt/puppetlabs/hdp':
       ensure => directory,
       mode   => '0775',
       owner  => $_final_hdp_user,
       group  => $_final_hdp_user,
-    ;
+      ;
     '/opt/puppetlabs/hdp/ssl':
       ensure => directory,
       mode   => '0700',
       owner  => $_final_hdp_user,
       group  => $_final_hdp_user,
-    ;
+      ;
     '/opt/puppetlabs/hdp/redis':
       ensure => directory,
       mode   => '0700',
       owner  => $_final_hdp_user,
       group  => $_final_hdp_user,
-    ;
+      ;
     '/opt/puppetlabs/hdp/docker-compose.yaml':
       ensure  => file,
       mode    => '0440',
       content => epp('hdp/docker-compose.yaml.epp', {
-        'hdp_version'             => $hdp_version,
-        'image_prefix'            => $image_prefix,
-        'image_repository'        => $image_repository,
-        'hdp_port'                => $hdp_port,
-        'hdp_ui_port'             => $hdp_ui_port,
-        'hdp_query_port'          => $hdp_query_port,
+          'hdp_version'             => $hdp_version,
+          'image_prefix'            => $image_prefix,
+          'image_repository'        => $image_repository,
+          'hdp_port'                => $hdp_port,
+          'hdp_ui_port'             => $hdp_ui_port,
+          'hdp_query_port'          => $hdp_query_port,
 
-        'hdp_manage_s3'           => $hdp_manage_s3,
-        'hdp_s3_endpoint'         => $_final_hdp_s3_endpoint,
-        'hdp_s3_region'           => $_final_hdp_s3_region,
-        'hdp_s3_access_key'       => $_final_hdp_s3_access_key,
-        'hdp_s3_secret_key'       => $_final_hdp_s3_secret_key,
-        'hdp_s3_disable_ssl'      => $_final_hdp_s3_disable_ssl,
-        'hdp_s3_facts_bucket'     => $_final_hdp_s3_facts_bucket,
-        'hdp_s3_force_path_style' => $_final_hdp_s3_force_path_style,
+          'hdp_manage_s3'           => $hdp_manage_s3,
+          'hdp_s3_endpoint'         => $_final_hdp_s3_endpoint,
+          'hdp_s3_region'           => $_final_hdp_s3_region,
+          'hdp_s3_access_key'       => $_final_hdp_s3_access_key,
+          'hdp_s3_secret_key'       => $_final_hdp_s3_secret_key,
+          'hdp_s3_disable_ssl'      => $_final_hdp_s3_disable_ssl,
+          'hdp_s3_facts_bucket'     => $_final_hdp_s3_facts_bucket,
+          'hdp_s3_force_path_style' => $_final_hdp_s3_force_path_style,
 
-        'hdp_manage_es'           => $hdp_manage_es,
-        'hdp_es_host'             => $_final_hdp_es_host,
-        'hdp_es_username'         => $_final_hdp_es_username,
-        'hdp_es_password'         => $_final_hdp_es_password,
+          'hdp_manage_es'           => $hdp_manage_es,
+          'hdp_es_host'             => $_final_hdp_es_host,
+          'hdp_es_username'         => $_final_hdp_es_username,
+          'hdp_es_password'         => $_final_hdp_es_password,
 
-        'ca_server'               => $ca_server,
-        'key_file'                => $key_file,
-        'cert_file'               => $cert_file,
-        'ca_cert_file'            => $ca_cert_file,
+          'ca_server'               => $ca_server,
+          'key_file'                => $key_file,
+          'cert_file'               => $cert_file,
+          'ca_cert_file'            => $ca_cert_file,
 
-        'ui_use_tls'              => $ui_use_tls,
-        'ui_key_file'             => $ui_key_file,
-        'ui_cert_file'            => $ui_cert_file,
-        'ui_ca_cert_file'         => $ui_ca_cert_file,
+          'ui_use_tls'              => $ui_use_tls,
+          'ui_key_file'             => $ui_key_file,
+          'ui_cert_file'            => $ui_cert_file,
+          'ui_ca_cert_file'         => $ui_ca_cert_file,
 
-        'dns_name'                => $dns_name,
-        'dns_alt_names'           => $dns_alt_names,
-        'hdp_user'                => $_final_hdp_user,
-        'root_dir'                => '/opt/puppetlabs/hdp',
-        'max_es_memory'           => $max_es_memory,
-        'mount_host_certs'        => $mount_host_certs,
+          'dns_name'                => $dns_name,
+          'dns_alt_names'           => $dns_alt_names,
+          'hdp_user'                => $_final_hdp_user,
+          'root_dir'                => '/opt/puppetlabs/hdp',
+          'max_es_memory'           => $max_es_memory,
+          'mount_host_certs'        => $mount_host_certs,
       }),
-    ;
+      ;
   }
 
   ## Elasticsearch container FS is all 1000
@@ -315,7 +333,7 @@ class hdp::app_stack (
         mode   => '0700',
         owner  => 1000,
         group  => 1000,
-      ;
+        ;
     }
   }
 
@@ -326,31 +344,30 @@ class hdp::app_stack (
         mode   => '0700',
         owner  => $_final_hdp_user,
         group  => $_final_hdp_user,
-      ;
+        ;
       '/opt/puppetlabs/hdp/minio/data':
         ensure => directory,
         mode   => '0700',
         owner  => $_final_hdp_user,
         group  => $_final_hdp_user,
-      ;
+        ;
       "/opt/puppetlabs/hdp/minio/data/${hdp_s3_facts_bucket}":
         ensure => directory,
         mode   => '0700',
         owner  => $_final_hdp_user,
         group  => $_final_hdp_user,
-      ;
+        ;
       '/opt/puppetlabs/hdp/minio/config':
         ensure => directory,
         mode   => '0700',
         owner  => $_final_hdp_user,
         group  => $_final_hdp_user,
-      ;
+        ;
     }
   }
 
-
   docker_compose { 'hdp':
     ensure        => present,
-    compose_files => [ '/opt/puppetlabs/hdp/docker-compose.yaml', ],
+    compose_files => ['/opt/puppetlabs/hdp/docker-compose.yaml',],
   }
 }

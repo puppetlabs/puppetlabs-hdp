@@ -31,7 +31,7 @@ Facter.add(:hdp_health) do
         out['image_data'] = image_data
         out['puppet_user'] = Facter::Core::Execution.execute("bash -c \"stat -c '%G' /etc/puppetlabs/puppet/ssl/private_keys/#{Facter.value('fqdn')}.pem | xargs id -u\"").to_i
         out
-      rescue
+      rescue # rubocop:disable Lint/HandleExceptions
       end
     end
   end
@@ -43,7 +43,6 @@ Facter.add(:hdp) do
     require 'puppet/indirector/resource/ral'
     require 'puppet/indirector/request'
     begin
-
       types = []
       Puppet::Type.eachtype do |t|
         next if t.name == :component
@@ -51,21 +50,20 @@ Facter.add(:hdp) do
       end
 
       out = {}
-      types.each { |type|
-              begin
-              res = {}
-              raw = Puppet::Resource::Ral.indirection.search("#{type}/")
-              raw.each { |r|
-                    res[r.name] = r.parameters
-              }
-              out[type] = res
-              rescue
-              end
-      }
+      types.each do |type|
+        begin
+          res = {}
+          raw = Puppet::Resource::Ral.indirection.search("#{type}/")
+          raw.each do |r|
+            res[r.name] = r.parameters
+          end
+          out[type] = res
+        rescue # rubocop:disable Lint/HandleExceptions
+        end
+      end
       out
     rescue => err
-       puts "#{err}"
+      puts err.to_s
     end
   end
 end
-

@@ -1,9 +1,9 @@
-require "time"
-require "puppet"
-require "puppet/reports/puppetdb"
-require "puppet/util/puppetdb"
-require "puppet/util/puppetdb/command_names"
-require "puppet/util/hdp"
+require 'time'
+require 'puppet'
+require 'puppet/reports/puppetdb'
+require 'puppet/util/puppetdb'
+require 'puppet/util/puppetdb/command_names'
+require 'puppet/util/hdp'
 
 Puppet::Reports.register_report(:hdp) do
   desc <<-DESC
@@ -16,13 +16,13 @@ Puppet::Reports.register_report(:hdp) do
 
   def settings
     return @settings if @settings
-    @settings_file = Puppet[:confdir] + "/hdp.yaml"
+    @settings_file = Puppet[:confdir] + '/hdp.yaml'
     @settings = YAML.load_file(@settings_file)
   end
 
   def process
     current_time = Time.now
-    hdp_urls = settings["hdp_urls"]
+    hdp_urls = settings['hdp_urls']
     hdp_urls.each do |host|
       Puppet.info "HDP sending report to #{host}"
       report_hash = report_to_hash(current_time)
@@ -36,16 +36,18 @@ Puppet::Reports.register_report(:hdp) do
   # @return Hash[<String, Object>]
   # @api private
   def report_to_hash(producer_timestamp)
-    profile("Convert report to wire format hash",
+    profile('Convert report to wire format hash',
             [:hdp, :report, :convert_to_wire_format_hash]) do
       if environment.nil?
-        raise Puppet::Error, "Environment is nil, unable to submit report. This may be due a bug with Puppet. Ensure you are running the latest revision, see PUP-2508 for more details."
+        raise Puppet::Error, 'Environment is nil, unable to submit report. This may be due a bug with Puppet. Ensure you are running the latest revision, see PUP-2508 for more details.'
       end
 
       resources = build_resources_list
-      is_noop = (defined?(noop) && (not noop.nil?)) ?
-        noop :
-        resources.any? { |rs| has_noop_event?(rs) } && resources.none? { |rs| has_enforcement_event?(rs) }
+      is_noop = if defined?(noop) && !noop.nil?
+                  noop
+                else
+                  resources.any? { |rs| noop_event?(rs) } && resources.none? { |rs| enforcement_event?(rs) }
+                end
 
       defaulted_catalog_uuid = defined?(catalog_uuid) ? catalog_uuid : transaction_uuid
       defaulted_job_id = defined?(job_id) ? job_id : nil
@@ -55,41 +57,41 @@ Puppet::Reports.register_report(:hdp) do
       defaulted_corrective_change = defined?(corrective_change) ? corrective_change : nil
 
       {
-        "certname" => host,
-        "job_id" => defaulted_job_id,
-        "puppet_version" => puppet_version,
-        "report_format" => report_format,
-        "configuration_version" => configuration_version.to_s,
-        "producer_timestamp" => Puppet::Util::Puppetdb.to_wire_time(producer_timestamp),
-        "start_time" => Puppet::Util::Puppetdb.to_wire_time(time),
-        "end_time" => Puppet::Util::Puppetdb.to_wire_time(time + run_duration),
-        "environment" => environment,
-        "transaction_uuid" => transaction_uuid,
-        "status" => status,
-        "noop" => is_noop,
-        "noop_pending" => defaulted_noop_pending,
-        "corrective_change" => defaulted_corrective_change,
-        "logs" => build_logs_list,
-        "metrics" => build_metrics_list,
-        "resources" => resources,
-        "catalog_uuid" => defaulted_catalog_uuid,
-        "code_id" => defaulted_code_id,
-        "cached_catalog_status" => defaulted_cached_catalog_status,
-        "producer" => Puppet[:node_name_value],
+        'certname' => host,
+        'job_id' => defaulted_job_id,
+        'puppet_version' => puppet_version,
+        'report_format' => report_format,
+        'configuration_version' => configuration_version.to_s,
+        'producer_timestamp' => Puppet::Util::Puppetdb.to_wire_time(producer_timestamp),
+        'start_time' => Puppet::Util::Puppetdb.to_wire_time(time),
+        'end_time' => Puppet::Util::Puppetdb.to_wire_time(time + run_duration),
+        'environment' => environment,
+        'transaction_uuid' => transaction_uuid,
+        'status' => status,
+        'noop' => is_noop,
+        'noop_pending' => defaulted_noop_pending,
+        'corrective_change' => defaulted_corrective_change,
+        'logs' => build_logs_list,
+        'metrics' => build_metrics_list,
+        'resources' => resources,
+        'catalog_uuid' => defaulted_catalog_uuid,
+        'code_id' => defaulted_code_id,
+        'cached_catalog_status' => defaulted_cached_catalog_status,
+        'producer' => Puppet[:node_name_value],
       }
     end
   end
 
   # @return TrueClass
   # @api private
-  def has_noop_event?(resource)
-    resource["events"].any? { |event| event["status"] == "noop" }
+  def noop_event?(resource)
+    resource['events'].any? { |event| event['status'] == 'noop' }
   end
 
   # @return TrueClass
   # @api private
-  def has_enforcement_event?(resource)
-    resource["events"].any? { |event| event["status"] != "noop" }
+  def enforcement_event?(resource)
+    resource['events'].any? { |event| event['status'] != 'noop' }
   end
 
   # @return Array[Hash]
@@ -99,7 +101,7 @@ Puppet::Reports.register_report(:hdp) do
             [:puppetdb, :resources_list, :build]) do
       resources = resource_statuses.values.map { |resource| resource_status_to_hash(resource) }
       if !config.include_unchanged_resources?
-        resources.select { |resource| (!resource["events"].empty?) or resource["skipped"] }
+        resources.select { |resource| !resource['events'].empty? || resource['skipped'] }
       else
         resources
       end
@@ -113,13 +115,13 @@ Puppet::Reports.register_report(:hdp) do
             [:puppetdb, :logs_list, :build]) do
       logs.map do |log|
         {
-          "file" => log.file,
-          "line" => log.line,
-          "level" => log.level,
-          "message" => log.message,
-          "source" => log.source,
-          "tags" => [*log.tags],
-          "time" => Puppet::Util::Puppetdb.to_wire_time(log.time),
+          'file' => log.file,
+          'line' => log.line,
+          'level' => log.level,
+          'message' => log.message,
+          'source' => log.source,
+          'tags' => [*log.tags],
+          'time' => Puppet::Util::Puppetdb.to_wire_time(log.time),
         }
       end
     end
@@ -131,8 +133,8 @@ Puppet::Reports.register_report(:hdp) do
     profile('Build metrics list (count: #{metrics.count})',
             [:puppetdb, :metrics_list, :build]) do
       metrics_list = []
-      metrics.each do |name, data|
-        metric_hashes = data.values.map { |x| { "category" => data.name, "name" => x.first, "value" => x.last } }
+      metrics.each do |_name, data|
+        metric_hashes = data.values.map { |x| { 'category' => data.name, 'name' => x.first, 'value' => x.last } }
         metrics_list.concat(metric_hashes)
       end
       metrics_list
@@ -151,8 +153,8 @@ Puppet::Reports.register_report(:hdp) do
     #
     # NOTE: failed reports have an empty metrics hash. Just send 0 for run time,
     #  since we don't have access to any better information.
-    if metrics["time"] and metrics["time"]["total"]
-      metrics["time"]["total"]
+    if metrics['time'] && metrics['time']['total']
+      metrics['time']['total']
     else
       0
     end
@@ -166,14 +168,14 @@ Puppet::Reports.register_report(:hdp) do
   def event_to_hash(event)
     corrective_change = defined?(event.corrective_change) ? event.corrective_change : nil
     {
-      "status" => event.status,
-      "timestamp" => Puppet::Util::Puppetdb.to_wire_time(event.time),
-      "name" => event.name,
-      "property" => event.property,
-      "new_value" => event.desired_value.to_s,
-      "old_value" => event.previous_value.to_s,
-      "corrective_change" => corrective_change,
-      "message" => event.message,
+      'status' => event.status,
+      'timestamp' => Puppet::Util::Puppetdb.to_wire_time(event.time),
+      'name' => event.name,
+      'property' => event.property,
+      'new_value' => event.desired_value.to_s,
+      'old_value' => event.previous_value.to_s,
+      'corrective_change' => corrective_change,
+      'message' => event.message,
     }
   end
 
@@ -192,15 +194,15 @@ Puppet::Reports.register_report(:hdp) do
   def resource_status_to_hash(resource_status)
     defaulted_corrective_change = defined?(resource_status.corrective_change) ? resource_status.corrective_change : nil
     {
-      "skipped" => resource_status.skipped,
-      "timestamp" => Puppet::Util::Puppetdb.to_wire_time(resource_status.time),
-      "resource_type" => resource_status.resource_type,
-      "resource_title" => resource_status.title.to_s,
-      "file" => resource_status.file,
-      "line" => resource_status.line,
-      "containment_path" => resource_status.containment_path,
-      "corrective_change" => defaulted_corrective_change,
-      "events" => build_events_list(resource_status.events),
+      'skipped' => resource_status.skipped,
+      'timestamp' => Puppet::Util::Puppetdb.to_wire_time(resource_status.time),
+      'resource_type' => resource_status.resource_type,
+      'resource_title' => resource_status.title.to_s,
+      'file' => resource_status.file,
+      'line' => resource_status.line,
+      'containment_path' => resource_status.containment_path,
+      'corrective_change' => defaulted_corrective_change,
+      'events' => build_events_list(resource_status.events),
     }
   end
 
