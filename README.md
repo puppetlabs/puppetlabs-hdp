@@ -1,6 +1,11 @@
 
 # hdp
 
+![](https://img.shields.io/puppetforge/pdk-version/puppetlabs/hdp.svg?style=popout)
+![](https://img.shields.io/puppetforge/v/puppetlabs/hdp.svg?style=popout)
+![](https://img.shields.io/puppetforge/dt/puppetlabs/hdp.svg?style=popout)
+[![Build Status](https://github.com/puppetlabs/puppetlabs-hdp/actions/workflows/pr_test.yml/badge.svg?branch=main)](https://github.com/puppetlabs/puppetlabs-hdp/actions/workflows/pr_test.yml)
+
 This module will help you setup HDP's report processor on a PE Primary or Compiler. It will also help you setup a node to host the HDP application stack.
 
 - [Description](#description)

@@ -6,7 +6,7 @@ describe 'hdp::app_stack' do
       let(:facts) { os_facts }
 
       context 'with defaults' do
-        it { is_expected.to compile }
+        it { is_expected.to compile.with_all_deps }
         it { is_expected.to  contain_group('docker').with_ensure('present') }
         it { is_expected.to  contain_class('docker').with_log_driver('journald') }
         it { is_expected.to  contain_class('docker::compose').with_ensure('present') }

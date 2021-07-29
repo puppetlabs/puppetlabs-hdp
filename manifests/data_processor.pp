@@ -19,11 +19,12 @@
 #
 # @param [String[1]] facts_cache_terminus
 #
+# @param [Boolean] collect_resources
+#
+# @param [String[1]] keep_node_re
+#
 # @param [String[1]] reports
 #   A string containg the list of report processors to enable
-#
-# @param [Optional[Stdlib::Fqdn]] pe_console
-#   The FQDN of your PE Console.
 #
 # @example Configuration via Hiera with default port
 #   ---
@@ -70,19 +71,16 @@ class hdp::data_processor (
   String[1] $reports = 'puppetdb,hdp',
   String[1] $keep_node_re = '.*',
 ) {
-
   if $collect_resources {
-    class { 'hdp::resource_collector':
-    }
+    include hdp::resource_collector
   }
 
   file { '/etc/puppetlabs/hdp':
-      ensure => directory,
-      mode   => '0755',
-      owner  => 'pe-puppet',
-      group  => 'pe-puppet',
+    ensure => directory,
+    mode   => '0755',
+    owner  => 'pe-puppet',
+    group  => 'pe-puppet',
   }
-
 
   if $manage_routes {
     file { '/etc/puppetlabs/hdp/hdp_routes.yaml':
@@ -91,8 +89,8 @@ class hdp::data_processor (
       group   => pe-puppet,
       mode    => '0640',
       content => epp('hdp/hdp_routes.yaml.epp', {
-        'facts_terminus'       => $facts_terminus,
-        'facts_cache_terminus' => $facts_cache_terminus,
+          'facts_terminus'       => $facts_terminus,
+          'facts_cache_terminus' => $facts_cache_terminus,
       }),
       notify  => Service['pe-puppetserver'],
     }
@@ -114,8 +112,8 @@ class hdp::data_processor (
     group   => pe-puppet,
     mode    => '0640',
     content => epp('hdp/hdp.yaml.epp', {
-      'hdp_urls'   => Array($hdp_url, true) + $extra_hdp_urls,
-      'keep_nodes' => $keep_node_re,
+        'hdp_urls'   => Array($hdp_url, true) + $extra_hdp_urls,
+        'keep_nodes' => $keep_node_re,
     }),
     notify  => Service['pe-puppetserver'],
   }
