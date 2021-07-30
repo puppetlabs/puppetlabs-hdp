@@ -1,8 +1,6 @@
 name: PR Testing
-
 on:
   - pull_request
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -11,7 +9,6 @@ jobs:
         puppet_versions:
           - '6'
           - '7'
-
     name: Puppet ${{ matrix.puppet_versions }}
     steps:
     - uses: actions/checkout@v1
