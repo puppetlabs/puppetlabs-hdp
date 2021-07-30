@@ -28,18 +28,18 @@
 #
 # @example Configuration via Hiera with default port
 #   ---
-#   hdp::report_processor::hdp_url: 'https://hdp.example.com/in'
-#   hdp::report_processor::pe_console: 'pe-console.example.com'
+#   hdp::data_processor::hdp_url: 'https://hdp.example.com/in'
+#   hdp::data_processor::pe_console: 'pe-console.example.com'
 #
 # @example Configuration via Hiera with custom port
 #   ---
-#   hdp::report_processor::hdp_url: 'https://hdp.example.com:9091/in'
-#   hdp::report_processor::pe_console: 'pe-console.example.com'
+#   hdp::data_processor::hdp_url: 'https://hdp.example.com:9091/in'
+#   hdp::data_processor::pe_console: 'pe-console.example.com'
 #
 # @example Configuration in a manifest with default port
 #   # Settings applied to both a master and compilers
 #   class { 'profile::masters_and_compilers':
-#     class { 'hdp::report_processor':
+#     class { 'hdp::data_processor':
 #       hdp_url  => 'https://hdp.example.com/in',
 #       pe_console => 'pe-console.example.com',
 #     }
@@ -48,7 +48,7 @@
 # @example Configuration in a manifest with custom port
 #   # Settings applied to both a master and compilers
 #   class { 'profile::masters_and_compilers':
-#     class { 'hdp::report_processor':
+#     class { 'hdp::data_processor':
 #       hdp_url  => 'https://hdp.example.com:9091/in',
 #       pe_console => 'pe-console.example.com',
 #     }
@@ -56,7 +56,7 @@
 #
 # @example Send data to two HDP servers
 #   ---
-#   hdp::report_processor::hdp_url:
+#   hdp::data_processor::hdp_url:
 #     - 'https://hdp-prod.example.com:9091/in'
 #     - 'https://hdp-staging.example.com:9091/in'
 #
