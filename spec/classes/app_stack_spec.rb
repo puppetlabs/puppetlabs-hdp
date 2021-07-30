@@ -4,7 +4,7 @@ describe 'hdp::app_stack' do
   on_supported_os.each do |os, os_facts|
     context "on #{os}" do
       let(:facts) { os_facts }
-      let(:params) { {'dns_name' => 'hdp.test.com'} }
+      let(:params) { { 'dns_name' => 'hdp.test.com' } }
 
       context 'with defaults' do
         it { is_expected.to compile.with_all_deps }
