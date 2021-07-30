@@ -366,6 +366,14 @@ class hdp::app_stack (
     }
   }
 
+  # If TLS is enabled, ensure certificate files are present before docker does
+  # its thing and restart containers if the files change.
+  if $ui_use_tls {
+    File[$ui_key_file] ~> Docker_compose['hdp']
+    File[$ui_cert_file] ~> Docker_compose['hdp']
+    File[$ui_ca_cert_file] ~> Docker_compose['hdp']
+  }
+
   docker_compose { 'hdp':
     ensure        => present,
     compose_files => ['/opt/puppetlabs/hdp/docker-compose.yaml',],
