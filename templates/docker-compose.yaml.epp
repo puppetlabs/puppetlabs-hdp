@@ -3,7 +3,8 @@
       Optional[String] $image_repository,
       Integer $hdp_port,
       Integer $hdp_query_port,
-      Integer $hdp_ui_port,
+      Integer $hdp_ui_http_port,
+      Integer $hdp_ui_https_port,
 
       Boolean $hdp_manage_s3,
       String $hdp_s3_endpoint,
@@ -157,10 +158,9 @@ services:
   ui-frontend:
     image: "<% if $image_repository { %><%= $image_repository %>/<% } %><%= $image_prefix %>ui-frontend:<%= $hdp_version %>"
     ports:
+      - "<%= $hdp_ui_http_port %>:80"
 <%- if $ui_use_tls { %>
-      - "<%= $hdp_ui_port %>:443"
-<%- } else { %>
-      - "<%= $hdp_ui_port %>:80"
+      - "<%= $hdp_ui_https_port %>:443"
 <%- } %>
     environment:
       - "HDP_ENABLE_TLS=<%= $ui_use_tls %>"

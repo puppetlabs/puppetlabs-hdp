@@ -13,8 +13,11 @@
 # @param [Integer] hdp_query_port
 #   Port to access HDP query service
 #
-# @param [Integer] hdp_ui_port
-#   Port to access HDP UI
+# @param [Integer] hdp_ui_http_port
+#   Port to access HDP UI via http
+#
+# @param [Integer] hdp_ui_https_port
+#   Port to access HDP UI via https
 #
 # @param [Boolean] $hdp_manage_es = true,
 #   Allow this module to manage elasticsearch
@@ -90,6 +93,12 @@
 #
 # @param [Boolean] ui_use_tls
 #   Use TLS for the UI and HDP Query endpoints
+#
+# @param [Boolean] ui_cert_files_puppet_managed
+#   Indicate if the cert files used by the UI are managed by Puppet. If they
+#   are then a relationship is created between these files and the
+#   `docker_compose` resource so that containers are restarted when
+#   the contents of the files change, such as when the certificate is renewed.
 #
 # @param [Optional[String]] ui_key_file
 #   Key file to use for UI - pem encoded.
@@ -168,7 +177,8 @@ class hdp::app_stack (
   Boolean $manage_docker = true,
   Optional[Array[String[1]]] $docker_users = undef,
   Integer $hdp_port = 9091,
-  Integer $hdp_ui_port = 80,
+  Integer $hdp_ui_http_port = 80,
+  Integer $hdp_ui_https_port = 443,
   Integer $hdp_query_port = 9092,
   String[1] $hdp_user = '11223',
   String[1] $compose_version = '1.25.0',
@@ -182,6 +192,7 @@ class hdp::app_stack (
   Optional[String[1]] $cert_file = undef,
 
   Boolean $ui_use_tls = false,
+  Boolean $ui_cert_files_puppet_managed = true,
   Optional[String[1]] $ui_ca_cert_file = undef,
   Optional[String[1]] $ui_key_file = undef,
   Optional[String[1]] $ui_cert_file = undef,
@@ -286,7 +297,8 @@ class hdp::app_stack (
           'image_prefix'            => $image_prefix,
           'image_repository'        => $image_repository,
           'hdp_port'                => $hdp_port,
-          'hdp_ui_port'             => $hdp_ui_port,
+          'hdp_ui_http_port'        => $hdp_ui_http_port,
+          'hdp_ui_https_port'       => $hdp_ui_https_port,
           'hdp_query_port'          => $hdp_query_port,
 
           'hdp_manage_s3'           => $hdp_manage_s3,
@@ -368,7 +380,7 @@ class hdp::app_stack (
 
   # If TLS is enabled, ensure certificate files are present before docker does
   # its thing and restart containers if the files change.
-  if $ui_use_tls {
+  if $ui_use_tls and $ui_cert_files_puppet_managed {
     File[$ui_key_file] ~> Docker_compose['hdp']
     File[$ui_cert_file] ~> Docker_compose['hdp']
     File[$ui_ca_cert_file] ~> Docker_compose['hdp']
