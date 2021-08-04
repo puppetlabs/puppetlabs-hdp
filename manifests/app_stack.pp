@@ -17,7 +17,7 @@
 #   Port to access HDP UI via http
 #
 # @param [Integer] hdp_ui_https_port
-#   Port to access HDP UI via https
+#   Port to access HDP UI via https if `ui_use_tls` is true
 #
 # @param [Boolean] $hdp_manage_es = true,
 #   Allow this module to manage elasticsearch
@@ -267,31 +267,25 @@ class hdp::app_stack (
 
   file {
     default:
-      owner   => 'root',
-      group   => 'docker',
+      ensure  => directory,
+      owner   => $_final_hdp_user,
+      group   => $_final_hdp_user,
       require => Group['docker'],
       ;
     '/opt/puppetlabs/hdp':
-      ensure => directory,
-      mode   => '0775',
-      owner  => $_final_hdp_user,
-      group  => $_final_hdp_user,
+      mode  => '0775',
       ;
     '/opt/puppetlabs/hdp/ssl':
-      ensure => directory,
-      mode   => '0700',
-      owner  => $_final_hdp_user,
-      group  => $_final_hdp_user,
+      mode  => '0700',
       ;
     '/opt/puppetlabs/hdp/redis':
-      ensure => directory,
-      mode   => '0700',
-      owner  => $_final_hdp_user,
-      group  => $_final_hdp_user,
+      mode  => '0700',
       ;
     '/opt/puppetlabs/hdp/docker-compose.yaml':
       ensure  => file,
       mode    => '0440',
+      owner   => 'root',
+      group   => 'docker',
       content => epp('hdp/docker-compose.yaml.epp', {
           'hdp_version'             => $hdp_version,
           'image_prefix'            => $image_prefix,
@@ -331,7 +325,8 @@ class hdp::app_stack (
           'root_dir'                => '/opt/puppetlabs/hdp',
           'max_es_memory'           => $max_es_memory,
           'mount_host_certs'        => $mount_host_certs,
-      }),
+        }
+      ),
       ;
   }
 
@@ -339,42 +334,27 @@ class hdp::app_stack (
   ## While not root, this very likely crashes with something with passwordless sudo on the main host
   ## 100% needs to change when we start deploying our own containers
   if $hdp_manage_es {
-    file {
-      '/opt/puppetlabs/hdp/elastic':
-        ensure => directory,
-        mode   => '0700',
-        owner  => 1000,
-        group  => 1000,
-        ;
+    file { '/opt/puppetlabs/hdp/elastic':
+      ensure => directory,
+      mode   => '0700',
+      owner  => 1000,
+      group  => 1000,
     }
   }
 
   if $hdp_manage_s3 {
-    file {
-      '/opt/puppetlabs/hdp/minio':
-        ensure => directory,
-        mode   => '0700',
-        owner  => $_final_hdp_user,
-        group  => $_final_hdp_user,
-        ;
-      '/opt/puppetlabs/hdp/minio/data':
-        ensure => directory,
-        mode   => '0700',
-        owner  => $_final_hdp_user,
-        group  => $_final_hdp_user,
-        ;
-      "/opt/puppetlabs/hdp/minio/data/${hdp_s3_facts_bucket}":
-        ensure => directory,
-        mode   => '0700',
-        owner  => $_final_hdp_user,
-        group  => $_final_hdp_user,
-        ;
-      '/opt/puppetlabs/hdp/minio/config':
-        ensure => directory,
-        mode   => '0700',
-        owner  => $_final_hdp_user,
-        group  => $_final_hdp_user,
-        ;
+    $_minio_directories = [
+      '/opt/puppetlabs/hdp/minio',
+      '/opt/puppetlabs/hdp/minio/config',
+      '/opt/puppetlabs/hdp/minio/data',
+      "/opt/puppetlabs/hdp/minio/data/${hdp_s3_facts_bucket}",
+    ]
+
+    file { $_minio_directories:
+      ensure => directory,
+      mode   => '0700',
+      owner  => $_final_hdp_user,
+      group  => $_final_hdp_user,
     }
   }
 
