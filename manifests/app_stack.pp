@@ -383,7 +383,10 @@ class hdp::app_stack (
   if $ui_use_tls and $ui_cert_files_puppet_managed {
     File[$ui_key_file] ~> Docker_compose['hdp']
     File[$ui_cert_file] ~> Docker_compose['hdp']
-    File[$ui_ca_cert_file] ~> Docker_compose['hdp']
+
+    if $ui_ca_cert_file {
+      File[$ui_ca_cert_file] ~> Docker_compose['hdp']
+    }
   }
 
   docker_compose { 'hdp':
