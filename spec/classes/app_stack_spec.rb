@@ -13,7 +13,11 @@ describe 'hdp::app_stack' do
         it { is_expected.to  contain_class('docker::compose').with_ensure('present') }
         it { is_expected.to  contain_file('/opt/puppetlabs/hdp').with_ensure('directory') }
         it { is_expected.to  contain_file('/opt/puppetlabs/hdp/docker-compose.yaml').with_content(%r{NAME=hdp\.test\.com}) }
-        it { is_expected.to  contain_docker_compose('hdp').with_compose_files(['/opt/puppetlabs/hdp/docker-compose.yaml']) }
+        it {
+          is_expected.to contain_docker_compose('hdp')
+            .with_compose_files(['/opt/puppetlabs/hdp/docker-compose.yaml'])
+            .that_subscribes_to('File[/opt/puppetlabs/hdp/docker-compose.yaml]')
+        }
         it { is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml').with_content(%r{- "80:80"}) }
         it { is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml').without_content(%r{- "443:443"}) }
       end
@@ -47,7 +51,7 @@ describe 'hdp::app_stack' do
               'File[/tmp/ui-ca.pem]',
               'File[/tmp/ui-cert.key]',
               'File[/tmp/ui-cert.pem]',
-              # 'File[/opt/puppetlabs/hdp/docker-compose.yaml]',
+              'File[/opt/puppetlabs/hdp/docker-compose.yaml]',
             ],
           )
         }
