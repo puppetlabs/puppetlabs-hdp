@@ -8,10 +8,10 @@ describe 'hdp::app_stack' do
 
       context 'with defaults' do
         it { is_expected.to compile.with_all_deps }
-        it { is_expected.to  contain_group('docker').with_ensure('present') }
-        it { is_expected.to  contain_class('docker').with_log_driver('journald') }
-        it { is_expected.to  contain_class('docker::compose').with_ensure('present') }
-        it { is_expected.to  contain_file('/opt/puppetlabs/hdp').with_ensure('directory') }
+        it { is_expected.to contain_group('docker').with_ensure('present') }
+        it { is_expected.to contain_class('docker').with_log_driver('journald') }
+        it { is_expected.to contain_class('docker::compose').with_ensure('present') }
+        it { is_expected.to contain_file('/opt/puppetlabs/hdp').with_ensure('directory') }
         it {
           is_expected.to contain_docker_compose('hdp')
             .with_compose_files(['/opt/puppetlabs/hdp/docker-compose.yaml'])
@@ -138,6 +138,29 @@ describe 'hdp::app_stack' do
               )
           }
         end
+      end
+
+      context 'with seperate versions' do
+        let(:params) do
+          {
+            'dns_name' => 'hdp.test.com',
+            'image_repository' => 'hub.docker.com',
+            'image_prefix' => '',
+            'hdp_version' => 'foo',
+            'ui_version' => 'bar',
+            'frontend_version' => 'baz',
+          }
+        end
+
+        it { is_expected.to compile.with_all_deps }
+        it {
+          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+            .with_owner('root')
+            .with_group('docker')
+            .with_content(%r{hub.docker.com/data-ingestion:foo})
+            .with_content(%r{hub.docker.com/ui:bar})
+            .with_content(%r{hub.docker.com/ui-frontend:baz})
+        }
       end
     end
   end
