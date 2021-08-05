@@ -68,7 +68,7 @@
 #   Image repository to pull images from - defaults to dockerhub.
 #   Can be used for airgapped environments/testing environments
 #
-# @param [String[1]] image_prefix
+# @param [String] image_prefix
 #   Prefix that comes before each image
 #   Can be used for easy name spacing under the same repository
 #
@@ -123,7 +123,15 @@
 #   Extra dns names attached to the puppet cert, can be used to bypass certname collisions
 #
 # @param [String[1]] hdp_version
-#   The version of the HDP containers to use
+#   The version of the HDP Data container to use
+#
+# @param [Optional[String[1]]] ui_version
+#   The version of the HDP UI container to use
+#   If undef, defaults to hdp_version
+#
+# @param [Optional[String[1]]] frontend_version
+#   The version of the HDP UI TLS Frontend container to use
+#   If undef, defaults to hdp_version
 #
 # @param [String[1]] log_driver
 #   The log driver Docker will use
@@ -188,8 +196,10 @@ class hdp::app_stack (
   Boolean $hdp_s3_force_path_style = true,
   Boolean $hdp_s3_disable_ssl = true,
 
-  String[1] $image_prefix = 'puppet/hdp-',
+  String $image_prefix = 'puppet/hdp-',
   String[1] $hdp_version = '0.0.1',
+  Optional[String[1]] $ui_version = undef,
+  Optional[String[1]] $frontend_version = undef,
   String[1] $log_driver = 'journald',
   String[1] $max_es_memory = '4G',
 ) {
@@ -242,6 +252,18 @@ class hdp::app_stack (
     $_final_hdp_s3_force_path_style=$hdp_s3_force_path_style
   }
 
+  if !$ui_version {
+    $_final_ui_version = $hdp_version
+  } else {
+    $_final_ui_version = $ui_version
+  }
+
+  if !$frontend_version {
+    $_final_frontend_version = $hdp_version
+  } else {
+    $_final_frontend_version = $frontend_version
+  }
+
   file {
     default:
       ensure  => directory,
@@ -265,6 +287,8 @@ class hdp::app_stack (
       group   => 'docker',
       content => epp('hdp/docker-compose.yaml.epp', {
           'hdp_version'             => $hdp_version,
+          'ui_version'              => $_final_ui_version,
+          'frontend_version'        => $_final_frontend_version,
           'image_prefix'            => $image_prefix,
           'image_repository'        => $image_repository,
           'hdp_port'                => $hdp_port,
