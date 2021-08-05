@@ -68,7 +68,7 @@
 #   Image repository to pull images from - defaults to dockerhub.
 #   Can be used for airgapped environments/testing environments
 #
-# @param [String[1]] image_prefix
+# @param [String] image_prefix
 #   Prefix that comes before each image
 #   Can be used for easy name spacing under the same repository
 #
@@ -196,7 +196,7 @@ class hdp::app_stack (
   Boolean $hdp_s3_force_path_style = true,
   Boolean $hdp_s3_disable_ssl = true,
 
-  String[1] $image_prefix = 'puppet/hdp-',
+  String $image_prefix = 'puppet/hdp-',
   String[1] $hdp_version = '0.0.1',
   Optional[String[1]] $ui_version = undef,
   Optional[String[1]] $frontend_version = undef,
