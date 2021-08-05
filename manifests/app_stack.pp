@@ -19,42 +19,42 @@
 # @param [Integer] hdp_ui_https_port
 #   Port to access HDP UI via https if `ui_use_tls` is true
 #
-# @param [Boolean] $hdp_manage_es = true,
+# @param [Boolean] hdp_manage_es = true
 #   Allow this module to manage elasticsearch
 #   If true, all other es parameters are ignored
 #
-# @param [String[1]] $hdp_es_host,
+# @param [String[1]] hdp_es_host
 #   Elasticsearch host to use
 #
-# @param [Optional[String[1]]] hdp_es_username,
+# @param [Optional[String[1]]] hdp_es_username
 #   Username to use to connect to elasticsearch
 #
-# @param [Optional[String[1]]] hdp_es_password,
+# @param [Optional[String[1]]] hdp_es_password
 #   Password to use to connect to elasticsearch
 #
-# @param [Boolean] $hdp_manage_s3,
+# @param [Boolean] hdp_manage_s3
 #   Allow this module to manage S3 itself. If true, 
 #   All other s3 parameters are ignored.
 #
-# @param [String[1]] $hdp_s3_endpoint
+# @param [String[1]] hdp_s3_endpoint
 #   The S3 Endpoint to use
 #
-# @param [String[1]] $hdp_s3_region
+# @param [String[1]] hdp_s3_region
 #   The S3 Region to use 
 #
-# @param [String[1]] $hdp_s3_access_key = 'puppet',
+# @param [String[1]] hdp_s3_access_key
 #   The S3 Access Key to use
 #
-# @param [String[1]] $hdp_s3_secret_key,
+# @param [String[1]] hdp_s3_secret_key
 #   The S3 Secret Key to use
 #
-# @param [String[1]] $hdp_s3_facts_bucket,
+# @param [String[1]] hdp_s3_facts_bucket
 #   The S3 Bucket to use for facts
 #
-# @param [Boolean] $hdp_s3_force_path_style,
+# @param [Boolean] hdp_s3_force_path_style
 #   Disable AWS specific S3 Path Style
 #
-# @param [Boolean] $hdp_s3_disable_ssl,
+# @param [Boolean] hdp_s3_disable_ssl
 #   Disable SSL for the S3 backend 
 #
 # @param [String] hdp_user
@@ -110,8 +110,9 @@
 #
 # @param [Optional[String]] ui_ca_cert_file
 #   CA Cert file to use for UI - pem encoded.
-#   Your browser should have key to access this if you want to set it
-#   Set this to not undef to protect this endpoint.
+#   Setting this to anything but undef will cause the HDP to validate clients with mTLS
+#   If you don't have access to a puppet cert and key in your browser, do not set this parameter.
+#   It is unlikely that you want this value set.
 #
 # @param [String[1]] dns_name
 #   Name that puppet server will find HDP at.
@@ -133,30 +134,6 @@
 # @param [String[1]] max_es_memory
 #   Max memory for ES to use - in JVM -Xmx{$max_es_memory} format.
 #   Example: 4G, 1024M. Defaults to 4G.
-#
-# @param hdp_manage_es
-#
-# @param hdp_es_host
-#
-# @param hdp_es_username
-#
-# @param hdp_es_password
-#
-# @param hdp_manage_s3
-#
-# @param hdp_s3_endpoint
-#
-# @param hdp_s3_region
-#
-# @param hdp_s3_access_key
-#
-# @param hdp_s3_secret_key
-#
-# @param hdp_s3_facts_bucket
-#
-# @param hdp_s3_force_path_style
-#
-# @param hdp_s3_disable_ssl
 #
 # @example Use defalts or configure via Hiera
 #   include hdp::app_stack
