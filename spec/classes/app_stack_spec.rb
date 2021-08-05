@@ -162,6 +162,27 @@ describe 'hdp::app_stack' do
             .with_content(%r{hub.docker.com/ui-frontend:baz})
         }
       end
+
+      context 'with same versions' do
+        let(:params) do
+          {
+            'dns_name' => 'hdp.test.com',
+            'image_repository' => 'hub.docker.com',
+            'image_prefix' => '',
+            'hdp_version' => 'foo',
+          }
+        end
+
+        it { is_expected.to compile.with_all_deps }
+        it {
+          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+            .with_owner('root')
+            .with_group('docker')
+            .with_content(%r{hub.docker.com/data-ingestion:foo})
+            .with_content(%r{hub.docker.com/ui:foo})
+            .with_content(%r{hub.docker.com/ui-frontend:foo})
+        }
+      end
     end
   end
 end
