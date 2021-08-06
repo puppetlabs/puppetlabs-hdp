@@ -21,10 +21,11 @@ spec:
       command:
         - "dockerd"
     - name: "puppet"
-      image: "puppet/puppetserver"
+      imagePullPolicy: "Always"
+      image: "puppet/puppetserver:latest"
       env:
-        name: "PUPPETSERVER_HOSTNAME"
-        value: "localhost"
+        - name: "PUPPETSERVER_HOSTNAME"
+          value: "localhost"
       resources:
         requests:
           memory: "1G"
@@ -32,8 +33,6 @@ spec:
         limits:
           memory: "1G"
           cpu: "1"
-      command:
-        - "dockerd"
   tolerations:
     - key: "runOn"
       operator: "Equal"
