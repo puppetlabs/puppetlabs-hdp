@@ -1,0 +1,41 @@
+apiVersion: "v1"
+kind: "Pod"
+metadata:
+  labels:
+    spotinst.io/restrict-scale-down: "true"
+  annotations:
+    io.kubernetes.cri-o.userns-mode: "auto:size=65536"
+spec:
+  runtimeClassName: "sysbox-runc"
+  containers:
+    - name: "builder"
+      imagePullPolicy: "Always"
+      image: "gcr.io/hdp-gcp-316600/puppet/hdp-build-image:latest"
+      resources:
+        requests:
+          memory: "2G"
+          cpu: "1"
+        limits:
+          memory: "2G"
+          cpu: "1"
+      command:
+        - "dockerd"
+    - name: "puppet"
+      image: "puppet/puppetserver"
+      env:
+        name: "PUPPETSERVER_HOSTNAME"
+        value: "localhost"
+      resources:
+        requests:
+          memory: "1G"
+          cpu: "1"
+        limits:
+          memory: "1G"
+          cpu: "1"
+      command:
+        - "dockerd"
+  tolerations:
+    - key: "runOn"
+      operator: "Equal"
+      value: "sysbox"
+      effect: "NoSchedule"
