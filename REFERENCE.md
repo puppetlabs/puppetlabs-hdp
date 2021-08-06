@@ -53,37 +53,8 @@ The following parameters are available in the `hdp::app_stack` class:
 * [`manage_docker`](#manage_docker)
 * [`hdp_port`](#hdp_port)
 * [`hdp_query_port`](#hdp_query_port)
-* [`hdp_ui_port`](#hdp_ui_port)
-* [`$hdp_manage_es`](#$hdp_manage_es)
-* [`$hdp_es_host,`](#$hdp_es_host,)
-* [`hdp_es_username,`](#hdp_es_username,)
-* [`hdp_es_password,`](#hdp_es_password,)
-* [`$hdp_manage_s3,`](#$hdp_manage_s3,)
-* [`$hdp_s3_endpoint`](#$hdp_s3_endpoint)
-* [`$hdp_s3_region`](#$hdp_s3_region)
-* [`$hdp_s3_access_key`](#$hdp_s3_access_key)
-* [`$hdp_s3_secret_key,`](#$hdp_s3_secret_key,)
-* [`$hdp_s3_facts_bucket,`](#$hdp_s3_facts_bucket,)
-* [`$hdp_s3_force_path_style,`](#$hdp_s3_force_path_style,)
-* [`$hdp_s3_disable_ssl,`](#$hdp_s3_disable_ssl,)
-* [`hdp_user`](#hdp_user)
-* [`compose_version`](#compose_version)
-* [`image_repository`](#image_repository)
-* [`image_prefix`](#image_prefix)
-* [`ca_server`](#ca_server)
-* [`ca_cert_file`](#ca_cert_file)
-* [`key_file`](#key_file)
-* [`cert_file`](#cert_file)
-* [`ui_use_tls`](#ui_use_tls)
-* [`ui_key_file`](#ui_key_file)
-* [`ui_cert_file`](#ui_cert_file)
-* [`ui_ca_cert_file`](#ui_ca_cert_file)
-* [`dns_name`](#dns_name)
-* [`dns_alt_names`](#dns_alt_names)
-* [`hdp_version`](#hdp_version)
-* [`log_driver`](#log_driver)
-* [`Optional[Array[String[1]]]`](#Optional[Array[String[1]]])
-* [`max_es_memory`](#max_es_memory)
+* [`hdp_ui_http_port`](#hdp_ui_http_port)
+* [`hdp_ui_https_port`](#hdp_ui_https_port)
 * [`hdp_manage_es`](#hdp_manage_es)
 * [`hdp_es_host`](#hdp_es_host)
 * [`hdp_es_username`](#hdp_es_username)
@@ -96,6 +67,27 @@ The following parameters are available in the `hdp::app_stack` class:
 * [`hdp_s3_facts_bucket`](#hdp_s3_facts_bucket)
 * [`hdp_s3_force_path_style`](#hdp_s3_force_path_style)
 * [`hdp_s3_disable_ssl`](#hdp_s3_disable_ssl)
+* [`hdp_user`](#hdp_user)
+* [`compose_version`](#compose_version)
+* [`image_repository`](#image_repository)
+* [`image_prefix`](#image_prefix)
+* [`ca_server`](#ca_server)
+* [`ca_cert_file`](#ca_cert_file)
+* [`key_file`](#key_file)
+* [`cert_file`](#cert_file)
+* [`ui_use_tls`](#ui_use_tls)
+* [`ui_cert_files_puppet_managed`](#ui_cert_files_puppet_managed)
+* [`ui_key_file`](#ui_key_file)
+* [`ui_cert_file`](#ui_cert_file)
+* [`ui_ca_cert_file`](#ui_ca_cert_file)
+* [`dns_name`](#dns_name)
+* [`dns_alt_names`](#dns_alt_names)
+* [`hdp_version`](#hdp_version)
+* [`ui_version`](#ui_version)
+* [`frontend_version`](#frontend_version)
+* [`log_driver`](#log_driver)
+* [`Optional[Array[String[1]]]`](#Optional[Array[String[1]]])
+* [`max_es_memory`](#max_es_memory)
 * [`docker_users`](#docker_users)
 
 ##### <a name="create_docker_group"></a>`create_docker_group`
@@ -130,89 +122,120 @@ Port to access HDP query service
 
 Default value: `9092`
 
-##### <a name="hdp_ui_port"></a>`hdp_ui_port`
+##### <a name="hdp_ui_http_port"></a>`hdp_ui_http_port`
 
 Data type: `Integer`
 
-Port to access HDP UI
+Port to access HDP UI via http
 
 Default value: `80`
 
-##### <a name="$hdp_manage_es"></a>`$hdp_manage_es`
+##### <a name="hdp_ui_https_port"></a>`hdp_ui_https_port`
+
+Data type: `Integer`
+
+Port to access HDP UI via https if `ui_use_tls` is true
+
+Default value: `443`
+
+##### <a name="hdp_manage_es"></a>`hdp_manage_es`
 
 Data type: `Boolean`
 
-= true,
+= true
 Allow this module to manage elasticsearch
 If true, all other es parameters are ignored
 
-##### <a name="$hdp_es_host,"></a>`$hdp_es_host,`
+Default value: ``true``
+
+##### <a name="hdp_es_host"></a>`hdp_es_host`
 
 Data type: `String[1]`
 
 Elasticsearch host to use
 
-##### <a name="hdp_es_username,"></a>`hdp_es_username,`
+Default value: `'http://elasticsearch:9200/'`
+
+##### <a name="hdp_es_username"></a>`hdp_es_username`
 
 Data type: `Optional[String[1]]`
 
 Username to use to connect to elasticsearch
 
-##### <a name="hdp_es_password,"></a>`hdp_es_password,`
+Default value: ``undef``
+
+##### <a name="hdp_es_password"></a>`hdp_es_password`
 
 Data type: `Optional[String[1]]`
 
 Password to use to connect to elasticsearch
 
-##### <a name="$hdp_manage_s3,"></a>`$hdp_manage_s3,`
+Default value: ``undef``
+
+##### <a name="hdp_manage_s3"></a>`hdp_manage_s3`
 
 Data type: `Boolean`
 
 Allow this module to manage S3 itself. If true,
 All other s3 parameters are ignored.
 
-##### <a name="$hdp_s3_endpoint"></a>`$hdp_s3_endpoint`
+Default value: ``true``
+
+##### <a name="hdp_s3_endpoint"></a>`hdp_s3_endpoint`
 
 Data type: `String[1]`
 
 The S3 Endpoint to use
 
-##### <a name="$hdp_s3_region"></a>`$hdp_s3_region`
+Default value: `'http://minio:9000/'`
+
+##### <a name="hdp_s3_region"></a>`hdp_s3_region`
 
 Data type: `String[1]`
 
 The S3 Region to use
 
-##### <a name="$hdp_s3_access_key"></a>`$hdp_s3_access_key`
+Default value: `'hdp'`
+
+##### <a name="hdp_s3_access_key"></a>`hdp_s3_access_key`
 
 Data type: `String[1]`
 
-= 'puppet',
 The S3 Access Key to use
 
-##### <a name="$hdp_s3_secret_key,"></a>`$hdp_s3_secret_key,`
+Default value: `'puppet'`
+
+##### <a name="hdp_s3_secret_key"></a>`hdp_s3_secret_key`
 
 Data type: `String[1]`
 
 The S3 Secret Key to use
 
-##### <a name="$hdp_s3_facts_bucket,"></a>`$hdp_s3_facts_bucket,`
+Default value: `'puppetpuppet'`
+
+##### <a name="hdp_s3_facts_bucket"></a>`hdp_s3_facts_bucket`
 
 Data type: `String[1]`
 
 The S3 Bucket to use for facts
 
-##### <a name="$hdp_s3_force_path_style,"></a>`$hdp_s3_force_path_style,`
+Default value: `'facts'`
+
+##### <a name="hdp_s3_force_path_style"></a>`hdp_s3_force_path_style`
 
 Data type: `Boolean`
 
 Disable AWS specific S3 Path Style
 
-##### <a name="$hdp_s3_disable_ssl,"></a>`$hdp_s3_disable_ssl,`
+Default value: ``true``
+
+##### <a name="hdp_s3_disable_ssl"></a>`hdp_s3_disable_ssl`
 
 Data type: `Boolean`
 
 Disable SSL for the S3 backend
+
+Default value: ``true``
 
 ##### <a name="hdp_user"></a>`hdp_user`
 
@@ -242,7 +265,7 @@ Default value: ``undef``
 
 ##### <a name="image_prefix"></a>`image_prefix`
 
-Data type: `String[1]`
+Data type: `String`
 
 Prefix that comes before each image
 Can be used for easy name spacing under the same repository
@@ -296,6 +319,17 @@ Use TLS for the UI and HDP Query endpoints
 
 Default value: ``false``
 
+##### <a name="ui_cert_files_puppet_managed"></a>`ui_cert_files_puppet_managed`
+
+Data type: `Boolean`
+
+Indicate if the cert files used by the UI are managed by Puppet. If they
+are then a relationship is created between these files and the
+`docker_compose` resource so that containers are restarted when
+the contents of the files change, such as when the certificate is renewed.
+
+Default value: ``true``
+
 ##### <a name="ui_key_file"></a>`ui_key_file`
 
 Data type: `Optional[String[1]]`
@@ -319,8 +353,9 @@ Default value: ``undef``
 Data type: `Optional[String[1]]`
 
 CA Cert file to use for UI - pem encoded.
-Your browser should have key to access this if you want to set it
-Set this to not undef to protect this endpoint.
+Setting this to anything but undef will cause the HDP to validate clients with mTLS
+If you don't have access to a puppet cert and key in your browser, do not set this parameter.
+It is unlikely that you want this value set.
 
 Default value: ``undef``
 
@@ -344,9 +379,27 @@ Default value: `[]`
 
 Data type: `String[1]`
 
-The version of the HDP containers to use
+The version of the HDP Data container to use
 
 Default value: `'0.0.1'`
+
+##### <a name="ui_version"></a>`ui_version`
+
+Data type: `Optional[String[1]]`
+
+The version of the HDP UI container to use
+If undef, defaults to hdp_version
+
+Default value: ``undef``
+
+##### <a name="frontend_version"></a>`frontend_version`
+
+Data type: `Optional[String[1]]`
+
+The version of the HDP UI TLS Frontend container to use
+If undef, defaults to hdp_version
+
+Default value: ``undef``
 
 ##### <a name="log_driver"></a>`log_driver`
 
@@ -373,102 +426,6 @@ Example: 4G, 1024M. Defaults to 4G.
 
 Default value: `'4G'`
 
-##### <a name="hdp_manage_es"></a>`hdp_manage_es`
-
-Data type: `Boolean`
-
-
-
-Default value: ``true``
-
-##### <a name="hdp_es_host"></a>`hdp_es_host`
-
-Data type: `String[1]`
-
-
-
-Default value: `'http://elasticsearch:9200/'`
-
-##### <a name="hdp_es_username"></a>`hdp_es_username`
-
-Data type: `Optional[String[1]]`
-
-
-
-Default value: ``undef``
-
-##### <a name="hdp_es_password"></a>`hdp_es_password`
-
-Data type: `Optional[String[1]]`
-
-
-
-Default value: ``undef``
-
-##### <a name="hdp_manage_s3"></a>`hdp_manage_s3`
-
-Data type: `Boolean`
-
-
-
-Default value: ``true``
-
-##### <a name="hdp_s3_endpoint"></a>`hdp_s3_endpoint`
-
-Data type: `String[1]`
-
-
-
-Default value: `'http://minio:9000/'`
-
-##### <a name="hdp_s3_region"></a>`hdp_s3_region`
-
-Data type: `String[1]`
-
-
-
-Default value: `'hdp'`
-
-##### <a name="hdp_s3_access_key"></a>`hdp_s3_access_key`
-
-Data type: `String[1]`
-
-
-
-Default value: `'puppet'`
-
-##### <a name="hdp_s3_secret_key"></a>`hdp_s3_secret_key`
-
-Data type: `String[1]`
-
-
-
-Default value: `'puppetpuppet'`
-
-##### <a name="hdp_s3_facts_bucket"></a>`hdp_s3_facts_bucket`
-
-Data type: `String[1]`
-
-
-
-Default value: `'facts'`
-
-##### <a name="hdp_s3_force_path_style"></a>`hdp_s3_force_path_style`
-
-Data type: `Boolean`
-
-
-
-Default value: ``true``
-
-##### <a name="hdp_s3_disable_ssl"></a>`hdp_s3_disable_ssl`
-
-Data type: `Boolean`
-
-
-
-Default value: ``true``
-
 ##### <a name="docker_users"></a>`docker_users`
 
 Data type: `Optional[Array[String[1]]]`
@@ -487,16 +444,16 @@ Simple class to enable the HDP data processor
 
 ```puppet
 ---
-hdp::report_processor::hdp_url: 'https://hdp.example.com/in'
-hdp::report_processor::pe_console: 'pe-console.example.com'
+hdp::data_processor::hdp_url: 'https://hdp.example.com/in'
+hdp::data_processor::pe_console: 'pe-console.example.com'
 ```
 
 ##### Configuration via Hiera with custom port
 
 ```puppet
 ---
-hdp::report_processor::hdp_url: 'https://hdp.example.com:9091/in'
-hdp::report_processor::pe_console: 'pe-console.example.com'
+hdp::data_processor::hdp_url: 'https://hdp.example.com:9091/in'
+hdp::data_processor::pe_console: 'pe-console.example.com'
 ```
 
 ##### Configuration in a manifest with default port
@@ -504,7 +461,7 @@ hdp::report_processor::pe_console: 'pe-console.example.com'
 ```puppet
 # Settings applied to both a master and compilers
 class { 'profile::masters_and_compilers':
-  class { 'hdp::report_processor':
+  class { 'hdp::data_processor':
     hdp_url  => 'https://hdp.example.com/in',
     pe_console => 'pe-console.example.com',
   }
@@ -516,7 +473,7 @@ class { 'profile::masters_and_compilers':
 ```puppet
 # Settings applied to both a master and compilers
 class { 'profile::masters_and_compilers':
-  class { 'hdp::report_processor':
+  class { 'hdp::data_processor':
     hdp_url  => 'https://hdp.example.com:9091/in',
     pe_console => 'pe-console.example.com',
   }
@@ -527,7 +484,7 @@ class { 'profile::masters_and_compilers':
 
 ```puppet
 ---
-hdp::report_processor::hdp_url:
+hdp::data_processor::hdp_url:
   - 'https://hdp-prod.example.com:9091/in'
   - 'https://hdp-staging.example.com:9091/in'
 ```
