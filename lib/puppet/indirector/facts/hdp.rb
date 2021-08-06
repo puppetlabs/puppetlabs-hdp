@@ -1,38 +1,38 @@
+require 'puppet/node/facts'
+require 'puppet/indirector/facts/puppetdb'
 require 'puppet/indirector/facts/yaml'
-require 'puppet/util/profiler'
 require 'puppet/util/hdp'
 require 'json'
 require 'time'
 
 # HDP Facts
-class Puppet::Node::Facts::HDP < Puppet::Node::Facts::Yaml
-  desc 'Save facts to HDP and then to yamlcache.'
+class Puppet::Node::Facts::Hdp < Puppet::Node::Facts::Puppetdb
+  desc 'Save facts to HDP, then Puppetdb.'
 
-  include Puppet::Util::HDP
-
-  def profile(message, metric_id, &block)
-    message = 'HDP: ' + message
-    arity = Puppet::Util::Profiler.method(:profile).arity
-    case arity
-    when 1
-      Puppet::Util::Profiler.profile(message, &block)
-    when 2, -2
-      Puppet::Util::Profiler.profile(message, metric_id, &block)
-    end
-  end
+  include Puppet::Util::Hdp
 
   def save(request)
-    # yaml cache goes first
-    super(request)
+    begin
+      Puppet.info 'Submitting facts to HDP'
+      current_time = Time.now
 
-    profile('hdp_facts#save', [:hdp, :facts, :save, request.key]) do
-      begin
-        Puppet.info 'Submitting facts to HDP'
-        current_time = Time.now
-        send_facts(request, current_time.clone.utc)
-      rescue StandardError => e
-        Puppet.err "Could not send facts to HDP: #{e}\n#{e.backtrace}"
+      keep_nodes_re = Regexp.new(settings['keep_nodes'])
+
+      if keep_nodes_re.match(request.instance.name)
+        hdp_urls = settings['hdp_urls']
+        hdp_urls.each do |host|
+          submit_facts(host, request, current_time.utc)
+        end
       end
+    rescue StandardError => e
+      Puppet.err "Could not send facts to HDP: #{e}
+#{e.backtrace}"
     end
+    ## Data has been sent to HDP - now delete our hdp facts and forward to puppetdb
+    r = request.instance.dup
+    r.values = r.values.dup
+    r.values.delete('hdp')
+    request.instance = r
+    super(request)
   end
 end

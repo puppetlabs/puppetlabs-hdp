@@ -1,5 +1,5 @@
 <%- | Array[Stdlib::HTTPUrl] $hdp_urls,
-      Optional[Stdlib::Fqdn] $pe_console = undef,
+      String[1] $keep_nodes,
 | -%>
 # managed by puppet hdp module
 ---
@@ -7,6 +7,4 @@
 <%  $hdp_urls.each |$url| { -%>
   - '<%= $url %>'
 <% } -%>
-<% if $pe_console{ -%>
-'pe_console': '<%= $pe_console %>'
-<% } -%>
+'keep_nodes': '<%= $keep_nodes %>'

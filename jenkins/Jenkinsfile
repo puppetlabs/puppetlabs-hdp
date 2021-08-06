@@ -1,0 +1,103 @@
+def setupCredsTo(path) {
+    sh 'echo "machine api.github.com" > ' + path
+    sh 'echo "login $GIT_USER" >> ' + path
+    sh 'echo "password $API_TOKEN" >> ' + path
+    sh 'chmod 600 ' + path
+}
+
+def deployUpdate(branch, tag) {
+    setupCredsTo("$HOME/.netrc")
+    sh script: "git clone https://$GIT_USER:$API_TOKEN@github.com/puppetlabs/hdp-integration-tests /tmp/hdp-integration-tests" + '''
+        cd /tmp/hdp-integration-tests
+        git checkout -B ''' + branch + '''
+        git branch --set-upstream-to=origin/''' + branch + ''' '''+ branch + '''
+        git config --global user.email "jenkins@puppetlabs.com"
+        git config --global user.name "Jenkins"
+        make update_module TAG=''' + tag + '''
+        git add .
+        git commit -m "Update hdp module with tag ''' + tag + '''"
+        git push
+        '''
+}
+
+
+pipeline {
+    agent {
+      kubernetes {
+        defaultContainer 'builder'
+        yamlFile 'jenkins/JenkinsKubernetesPod.yaml'
+      }
+    }
+    options {
+        timestamps()
+        buildDiscarder(logRotator(numToKeepStr: '30'))
+        timeout(time: 25, unit: 'MINUTES', activity: true) //25 minutes of 'inactivity' (no log output)
+        ansiColor('xterm')
+    }
+    environment {
+        CI = 'true'
+        ARTIFACTORY_SERVER = 'artifactory'
+        VERSION = sh(script: "git log -n 1 --pretty=format:'%h'", returnStdout: true).trim()
+        GIT_TAG = sh(script: "git describe --always", returnStdout: true).trim()
+        GIT_SHA = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+        API_TOKEN = credentials('github-api-token')
+        GIT_USER = "puppetlabs-jenkins"
+    }
+    parameters {
+        booleanParam(name: 'DOCKER_CLEANUP', defaultValue: false, description: 'Perform Docker Cleanup at start of run. WARNING: may effect other CI jobs')
+    }
+    stages {
+        stage('Run Tests') {
+            matrix {
+              axes {
+                axis {
+                    name 'puppet_version'
+                    values '6', '7'
+                }
+              }
+              stages {
+                  stage("PDK Validate") {
+                      steps {
+                          sh 'pdk validate --puppet-version ${puppet_version}'
+                      }
+                  }
+                  stage("PDK Test") {
+                      steps {
+                          sh 'pdk test unit --puppet-version ${puppet_version}'
+                      }
+                  }
+              }
+           }
+        }
+        stage('Accept') {
+            steps {
+                deployUpdate(BRANCH_NAME, GIT_TAG)
+            }
+        }
+    }
+}
+
+def slackNotifyBuild() {
+  script {
+    def color = [
+      'SUCCESS': 'good',
+      'FAILURE': 'danger',
+      'UNSTABLE': 'danger',
+      'ABORTED': 'danger'
+    ][currentBuild.currentResult]
+
+    def branchName = env.CHANGE_TITLE ?: env.BRANCH_NAME
+
+    def message =
+      "*${currentBuild.currentResult}:* Job ${JOB_NAME} at stage '${STAGE_NAME}', " +
+      "build ${BUILD_NUMBER}" +
+      "\n      $GIT_TAG built from ${branchName}" +
+      "\n      <${BUILD_URL}|More info...>"
+
+    slackSend(
+      channel: 'hdp-build-alerts',
+      color: "$color",
+      message: "$message"
+    )
+  }
+}

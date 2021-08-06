@@ -1,6 +1,9 @@
+<%- | String $facts_terminus,
+      String $facts_cache_terminus,
+| -%>
 # managed by puppet hdp module
 ---
 master:
   facts:
-    terminus: "<%= $hdp::report_processor::facts_terminus %>"
-    cache: "<%= $hdp::report_processor::facts_cache_terminus %>"
+    terminus: "<%= $facts_terminus %>"
+    cache: "<%= $facts_cache_terminus %>"
