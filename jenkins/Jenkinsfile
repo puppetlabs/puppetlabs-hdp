@@ -47,27 +47,25 @@ pipeline {
         booleanParam(name: 'DOCKER_CLEANUP', defaultValue: false, description: 'Perform Docker Cleanup at start of run. WARNING: may effect other CI jobs')
     }
     stages {
-        stage('Run Tests') {
-            matrix {
-              axes {
-                axis {
-                    name 'puppet_version'
-                    values '6', '7'
-                }
-              }
-              stages {
-                  stage("PDK Validate") {
-                      steps {
-                          sh 'pdk validate --puppet-version ${puppet_version}'
-                      }
-                  }
-                  stage("PDK Test") {
-                      steps {
-                          sh 'pdk test unit --puppet-version ${puppet_version}'
-                      }
-                  }
-              }
-           }
+        stage("PDK Validate 6") {
+            steps {
+                sh 'pdk validate --puppet-version 6'
+            }
+        }
+        stage("PDK Test 6") {
+            steps {
+                sh 'pdk test unit --puppet-version 6'
+            }
+        }
+        stage("PDK Validate 7") {
+            steps {
+                sh 'pdk validate --puppet-version 7'
+            }
+        }
+        stage("PDK Test 7") {
+            steps {
+                sh 'pdk test unit --puppet-version 7'
+            }
         }
         stage('Accept') {
             steps {
@@ -101,3 +99,4 @@ def slackNotifyBuild() {
     )
   }
 }
+
