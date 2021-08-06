@@ -6,13 +6,21 @@
 
 ### Classes
 
+#### Public Classes
+
 * [`hdp::app_stack`](#hdpapp_stack): This class takes care of configuring a node to run HDP.
 * [`hdp::data_processor`](#hdpdata_processor): Simple class to enable the HDP data processor
 * [`hdp::resource_collector`](#hdpresource_collector): This class adds module to the node, which adds our custom facts. Without it, we don't have the ability to pull all ral resources
 
+#### Private Classes
+
+* `hdp::app_stack::config`
+* `hdp::app_stack::install`
+* `hdp::app_stack::service`
+
 ### Data types
 
-* [`HDP::Url`](#hdpurl)
+* [`HDP::Url`](#hdpurl): HDP::Url is a metatype that supports both single and multiple urls
 
 ### Tasks
 
@@ -28,7 +36,7 @@ This class takes care of configuring a node to run HDP.
 
 #### Examples
 
-##### Use defalts or configure via Hiera
+##### Configure via Hiera
 
 ```puppet
 include hdp::app_stack
@@ -40,8 +48,32 @@ include hdp::app_stack
 realize(Group['docker'])
 
 class { 'hdp::app_stack':
+  dns_name            => 'http://hdp-app.example.com',
   create_docker_group => false,
   require             => Group['docker'],
+}
+```
+
+##### Enable TLS using puppet-managed certs on the frontend
+
+```puppet
+class { 'hdp::app_stack':
+  dns_name     => 'http://hdp-app.example.com',
+  ui_use_tls   => true,
+  ui_key_file  => $profile::ssl::hdp_keyfile,
+  ui_cert_file => $profile::ssl::hdp_full_chain,
+}
+```
+
+##### Enable TLS using manually managed certs on the frontend
+
+```puppet
+class { 'hdp::app_stack':
+  dns_name                     => 'http://hdp-app.example.com',
+  ui_use_tls                   => true,
+  ui_cert_files_puppet_managed => false,
+  ui_key_file                  => '/etc/pki/private/hdp-app.key',
+  ui_cert_file                 => '/etc/pki/certs/full-chain.crt',
 }
 ```
 
@@ -86,9 +118,8 @@ The following parameters are available in the `hdp::app_stack` class:
 * [`ui_version`](#ui_version)
 * [`frontend_version`](#frontend_version)
 * [`log_driver`](#log_driver)
-* [`Optional[Array[String[1]]]`](#Optional[Array[String[1]]])
-* [`max_es_memory`](#max_es_memory)
 * [`docker_users`](#docker_users)
+* [`max_es_memory`](#max_es_memory)
 
 ##### <a name="create_docker_group"></a>`create_docker_group`
 
@@ -409,13 +440,13 @@ The log driver Docker will use
 
 Default value: `'journald'`
 
-##### <a name="Optional[Array[String[1]]]"></a>`Optional[Array[String[1]]]`
+##### <a name="docker_users"></a>`docker_users`
 
-Data type: `Optional[Array[String[1]]] docker_users
-Users to be added to the docker group on the system`
+Data type: `Optional[Array[String[1]]]`
 
-docker_users
 Users to be added to the docker group on the system
+
+Default value: ``undef``
 
 ##### <a name="max_es_memory"></a>`max_es_memory`
 
@@ -425,14 +456,6 @@ Max memory for ES to use - in JVM -Xmx{$max_es_memory} format.
 Example: 4G, 1024M. Defaults to 4G.
 
 Default value: `'4G'`
-
-##### <a name="docker_users"></a>`docker_users`
-
-Data type: `Optional[Array[String[1]]]`
-
-
-
-Default value: ``undef``
 
 ### <a name="hdpdata_processor"></a>`hdp::data_processor`
 
@@ -583,7 +606,7 @@ Without it, we don't have the ability to pull all ral resources
 
 ### <a name="hdpurl"></a>`HDP::Url`
 
-The HDP::Url data type.
+HDP::Url is a metatype that supports both single and multiple urls
 
 Alias of
 
