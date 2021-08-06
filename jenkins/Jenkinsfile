@@ -1,25 +1,5 @@
-def setupCredsTo(path) {
-    sh 'echo "machine api.github.com" > ' + path
-    sh 'echo "login $GIT_USER" >> ' + path
-    sh 'echo "password $API_TOKEN" >> ' + path
-    sh 'chmod 600 ' + path
-}
-
-def deployUpdate(branch, tag) {
-    setupCredsTo("$HOME/.netrc")
-    sh script: "git clone https://$GIT_USER:$API_TOKEN@github.com/puppetlabs/hdp-integration-tests /tmp/hdp-integration-tests" + '''
-        cd /tmp/hdp-integration-tests
-        git checkout -B ''' + branch + '''
-        git branch --set-upstream-to=origin/''' + branch + ''' '''+ branch + '''
-        git config --global user.email "jenkins@puppetlabs.com"
-        git config --global user.name "Jenkins"
-        make update_module TAG=''' + tag + '''
-        git add .
-        git commit -m "Update hdp module with tag ''' + tag + '''"
-        git push
-        '''
-}
-
+@Library("hdp-utils")
+def Utils = new com.puppet.hdp.Utils()
 
 pipeline {
     agent {
@@ -65,38 +45,17 @@ pipeline {
         stage("PDK Test 7") {
             steps {
                 sh 'pdk test unit --puppet-version 7'
+                script {
+                    Utils.slackNotifyBuild(currentBuild, env)
+                }
             }
         }
         stage('Accept') {
             steps {
-                deployUpdate(BRANCH_NAME, GIT_TAG)
+                script {
+                    Utils.pushToTests("module", BRANCH_NAME, GIT_TAG)
+                }
             }
         }
     }
 }
-
-def slackNotifyBuild() {
-  script {
-    def color = [
-      'SUCCESS': 'good',
-      'FAILURE': 'danger',
-      'UNSTABLE': 'danger',
-      'ABORTED': 'danger'
-    ][currentBuild.currentResult]
-
-    def branchName = env.CHANGE_TITLE ?: env.BRANCH_NAME
-
-    def message =
-      "*${currentBuild.currentResult}:* Job ${JOB_NAME} at stage '${STAGE_NAME}', " +
-      "build ${BUILD_NUMBER}" +
-      "\n      $GIT_TAG built from ${branchName}" +
-      "\n      <${BUILD_URL}|More info...>"
-
-    slackSend(
-      channel: 'hdp-build-alerts',
-      color: "$color",
-      message: "$message"
-    )
-  }
-}
-
