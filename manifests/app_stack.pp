@@ -57,11 +57,11 @@
 # @param [Boolean] hdp_s3_disable_ssl
 #   Disable SSL for the S3 backend 
 #
-# @param [String] hdp_user
+# @param [String[1]] hdp_user
 #   User to run HDP + all infra services as. Also owns mounted volumes
 #   Set to Puppet if certname == dns_name
 #   
-# @param [String] compose_version
+# @param [String[1]] compose_version
 #   The version of docker-compose to install
 #
 # @param [Optional[String[1]]] image_repository
@@ -87,7 +87,7 @@
 #   Private key for cert_file - pem encoded.
 #   This or ca_server can be specified
 #
-# @param [Optional[String]] cert_file
+# @param [Optional[String[1]]] cert_file
 #   Puppet PKI cert file - pem encoded.
 #   This or ca_server can be specified
 #
@@ -100,15 +100,15 @@
 #   `docker_compose` resource so that containers are restarted when
 #   the contents of the files change, such as when the certificate is renewed.
 #
-# @param [Optional[String]] ui_key_file
+# @param [Optional[String[1]]] ui_key_file
 #   Key file to use for UI - pem encoded.
 #   Your browser should trust this you set ui_use_tls
 #   
-# @param [Optional[String]] ui_cert_file
+# @param [Optional[String[1]]] ui_cert_file
 #   Cert file to use for UI - pem encoded.
 #   Your browser should trust this you set ui_use_tls
 #
-# @param [Optional[String]] ui_ca_cert_file
+# @param [Optional[String[1]]] ui_ca_cert_file
 #   CA Cert file to use for UI - pem encoded.
 #   Setting this to anything but undef will cause the HDP to validate clients with mTLS
 #   If you don't have access to a puppet cert and key in your browser, do not set this parameter.
@@ -136,22 +136,40 @@
 # @param [String[1]] log_driver
 #   The log driver Docker will use
 #
-# @param [Optional[Array[String[1]]] docker_users
+# @param [Optional[Array[String[1]]]] docker_users
 #   Users to be added to the docker group on the system
 #
 # @param [String[1]] max_es_memory
 #   Max memory for ES to use - in JVM -Xmx{$max_es_memory} format.
 #   Example: 4G, 1024M. Defaults to 4G.
 #
-# @example Use defalts or configure via Hiera
+# @example Configure via Hiera
 #   include hdp::app_stack
 #
 # @example Manage the docker group elsewhere
 #   realize(Group['docker'])
 #
 #   class { 'hdp::app_stack':
+#     dns_name            => 'http://hdp-app.example.com',
 #     create_docker_group => false,
 #     require             => Group['docker'],
+#   }
+#
+# @example Enable TLS using puppet-managed certs on the frontend
+#   class { 'hdp::app_stack':
+#     dns_name     => 'http://hdp-app.example.com',
+#     ui_use_tls   => true,
+#     ui_key_file  => $profile::ssl::hdp_keyfile,
+#     ui_cert_file => $profile::ssl::hdp_full_chain,
+#   }
+#
+# @example Enable TLS using manually managed certs on the frontend
+#   class { 'hdp::app_stack':
+#     dns_name                     => 'http://hdp-app.example.com',
+#     ui_use_tls                   => true,
+#     ui_cert_files_puppet_managed => false,
+#     ui_key_file                  => '/etc/pki/private/hdp-app.key',
+#     ui_cert_file                 => '/etc/pki/certs/full-chain.crt',
 #   }
 #
 class hdp::app_stack (
@@ -203,177 +221,11 @@ class hdp::app_stack (
   String[1] $log_driver = 'journald',
   String[1] $max_es_memory = '4G',
 ) {
-  if $create_docker_group {
-    ensure_resource('group', 'docker', { 'ensure' => 'present' })
-  }
+  contain hdp::app_stack::install
+  contain hdp::app_stack::config
+  contain hdp::app_stack::service
 
-  if $manage_docker {
-    class { 'docker':
-      docker_users => $docker_users,
-      log_driver   => $log_driver,
-    }
-
-    class { 'docker::compose':
-      ensure  => present,
-      version => $compose_version,
-    }
-  }
-
-  $mount_host_certs=$trusted['certname'] == $dns_name
-  if $mount_host_certs {
-    $_final_hdp_user = validate_string($facts['hdp_health']['puppet_user'])
-  } else {
-    $_final_hdp_user = $hdp_user
-  }
-
-  if $hdp_manage_es {
-    $_final_hdp_es_username = undef
-    $_final_hdp_es_password = undef
-    $_final_hdp_es_host = 'http://elasticsearch:9200/'
-  } else {
-    $_final_hdp_es_username = $hdp_es_username
-    $_final_hdp_es_password = $hdp_es_password
-    $_final_hdp_es_host = $hdp_es_host
-  }
-
-  $_final_hdp_s3_access_key=$hdp_s3_access_key
-  $_final_hdp_s3_secret_key=$hdp_s3_secret_key
-  if $hdp_manage_s3 {
-    $_final_hdp_s3_endpoint='http://minio:9000/'
-    $_final_hdp_s3_region='hdp'
-    $_final_hdp_s3_facts_bucket='facts'
-    $_final_hdp_s3_disable_ssl=true
-    $_final_hdp_s3_force_path_style=true
-  } else {
-    $_final_hdp_s3_endpoint=$hdp_s3_endpoint
-    $_final_hdp_s3_region=$hdp_s3_region
-    $_final_hdp_s3_facts_bucket=$hdp_s3_facts_bucket
-    $_final_hdp_s3_disable_ssl=$hdp_s3_disable_ssl
-    $_final_hdp_s3_force_path_style=$hdp_s3_force_path_style
-  }
-
-  if !$ui_version {
-    $_final_ui_version = $hdp_version
-  } else {
-    $_final_ui_version = $ui_version
-  }
-
-  if !$frontend_version {
-    $_final_frontend_version = $hdp_version
-  } else {
-    $_final_frontend_version = $frontend_version
-  }
-
-  file {
-    default:
-      ensure  => directory,
-      owner   => $_final_hdp_user,
-      group   => $_final_hdp_user,
-      require => Group['docker'],
-      ;
-    '/opt/puppetlabs/hdp':
-      mode  => '0775',
-      ;
-    '/opt/puppetlabs/hdp/ssl':
-      mode  => '0700',
-      ;
-    '/opt/puppetlabs/hdp/redis':
-      mode  => '0700',
-      ;
-    '/opt/puppetlabs/hdp/docker-compose.yaml':
-      ensure  => file,
-      mode    => '0440',
-      owner   => 'root',
-      group   => 'docker',
-      content => epp('hdp/docker-compose.yaml.epp', {
-          'hdp_version'             => $hdp_version,
-          'ui_version'              => $_final_ui_version,
-          'frontend_version'        => $_final_frontend_version,
-          'image_prefix'            => $image_prefix,
-          'image_repository'        => $image_repository,
-          'hdp_port'                => $hdp_port,
-          'hdp_ui_http_port'        => $hdp_ui_http_port,
-          'hdp_ui_https_port'       => $hdp_ui_https_port,
-          'hdp_query_port'          => $hdp_query_port,
-
-          'hdp_manage_s3'           => $hdp_manage_s3,
-          'hdp_s3_endpoint'         => $_final_hdp_s3_endpoint,
-          'hdp_s3_region'           => $_final_hdp_s3_region,
-          'hdp_s3_access_key'       => $_final_hdp_s3_access_key,
-          'hdp_s3_secret_key'       => $_final_hdp_s3_secret_key,
-          'hdp_s3_disable_ssl'      => $_final_hdp_s3_disable_ssl,
-          'hdp_s3_facts_bucket'     => $_final_hdp_s3_facts_bucket,
-          'hdp_s3_force_path_style' => $_final_hdp_s3_force_path_style,
-
-          'hdp_manage_es'           => $hdp_manage_es,
-          'hdp_es_host'             => $_final_hdp_es_host,
-          'hdp_es_username'         => $_final_hdp_es_username,
-          'hdp_es_password'         => $_final_hdp_es_password,
-
-          'ca_server'               => $ca_server,
-          'key_file'                => $key_file,
-          'cert_file'               => $cert_file,
-          'ca_cert_file'            => $ca_cert_file,
-
-          'ui_use_tls'              => $ui_use_tls,
-          'ui_key_file'             => $ui_key_file,
-          'ui_cert_file'            => $ui_cert_file,
-          'ui_ca_cert_file'         => $ui_ca_cert_file,
-
-          'dns_name'                => $dns_name,
-          'dns_alt_names'           => $dns_alt_names,
-          'hdp_user'                => $_final_hdp_user,
-          'root_dir'                => '/opt/puppetlabs/hdp',
-          'max_es_memory'           => $max_es_memory,
-          'mount_host_certs'        => $mount_host_certs,
-        }
-      ),
-      ;
-  }
-
-  ## Elasticsearch container FS is all 1000
-  ## While not root, this very likely crashes with something with passwordless sudo on the main host
-  ## 100% needs to change when we start deploying our own containers
-  if $hdp_manage_es {
-    file { '/opt/puppetlabs/hdp/elastic':
-      ensure => directory,
-      mode   => '0700',
-      owner  => 1000,
-      group  => 1000,
-    }
-  }
-
-  if $hdp_manage_s3 {
-    $_minio_directories = [
-      '/opt/puppetlabs/hdp/minio',
-      '/opt/puppetlabs/hdp/minio/config',
-      '/opt/puppetlabs/hdp/minio/data',
-      "/opt/puppetlabs/hdp/minio/data/${hdp_s3_facts_bucket}",
-    ]
-
-    file { $_minio_directories:
-      ensure => directory,
-      mode   => '0700',
-      owner  => $_final_hdp_user,
-      group  => $_final_hdp_user,
-    }
-  }
-
-  # If TLS is enabled, ensure certificate files are present before docker does
-  # its thing and restart containers if the files change.
-  if $ui_use_tls and $ui_cert_files_puppet_managed {
-    File[$ui_key_file] ~> Docker_compose['hdp']
-    File[$ui_cert_file] ~> Docker_compose['hdp']
-
-    if $ui_ca_cert_file {
-      File[$ui_ca_cert_file] ~> Docker_compose['hdp']
-    }
-  }
-
-  docker_compose { 'hdp':
-    ensure        => present,
-    compose_files => ['/opt/puppetlabs/hdp/docker-compose.yaml',],
-    require       => File['/opt/puppetlabs/hdp/docker-compose.yaml'],
-    subscribe     => File['/opt/puppetlabs/hdp/docker-compose.yaml'],
-  }
+  Class['hdp::app_stack::install']
+  -> Class['hdp::app_stack::config']
+  -> Class['hdp::app_stack::service']
 }
