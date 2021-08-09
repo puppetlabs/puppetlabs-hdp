@@ -13,6 +13,15 @@
 # @param [Integer] hdp_query_port
 #   Port to access HDP query service
 #
+# @param [Optional[String[1]]] hdp_query_username
+#   Username to add basic auth to query service
+#
+# @param [Optional[Sensitive[String[1][]] hdp_query_password
+#   Password to add basic auth to query service
+#   Can be a password string, but if it starts with a $,
+#   will be validated using Linux standards - $<algo>$<salt>$<hash>.
+#   Only algos of sha256 and sha512 are valid - $5$ and $6$. All other passwords will always be rejected.
+#
 # @param [Integer] hdp_ui_http_port
 #   Port to access HDP UI via http
 #
@@ -29,7 +38,7 @@
 # @param [Optional[String[1]]] hdp_es_username
 #   Username to use to connect to elasticsearch
 #
-# @param [Optional[String[1]]] hdp_es_password
+# @param [Optional[Sensitive[String[1]]]] hdp_es_password
 #   Password to use to connect to elasticsearch
 #
 # @param [Boolean] hdp_manage_s3
@@ -45,7 +54,7 @@
 # @param [String[1]] hdp_s3_access_key
 #   The S3 Access Key to use
 #
-# @param [String[1]] hdp_s3_secret_key
+# @param [Sensitive[String[1]]] hdp_s3_secret_key
 #   The S3 Secret Key to use
 #
 # @param [String[1]] hdp_s3_facts_bucket
@@ -183,6 +192,9 @@ class hdp::app_stack (
   Integer $hdp_ui_http_port = 80,
   Integer $hdp_ui_https_port = 443,
   Integer $hdp_query_port = 9092,
+  Optional[String[1]] $hdp_query_username = undef,
+  Optional[Sensitive[String[1]]] $hdp_query_password = undef,
+
   String[1] $hdp_user = '11223',
   String[1] $compose_version = '1.25.0',
   Optional[String[1]] $image_repository = undef,
@@ -203,13 +215,13 @@ class hdp::app_stack (
   Boolean $hdp_manage_es = true,
   String[1] $hdp_es_host = 'http://elasticsearch:9200/',
   Optional[String[1]] $hdp_es_username = undef,
-  Optional[String[1]] $hdp_es_password = undef,
+  Optional[Sensitive[String[1]]] $hdp_es_password = undef,
 
   Boolean $hdp_manage_s3 = true,
   String[1] $hdp_s3_endpoint = 'http://minio:9000/',
   String[1] $hdp_s3_region = 'hdp',
   String[1] $hdp_s3_access_key = 'puppet',
-  String[1] $hdp_s3_secret_key = 'puppetpuppet',
+  Sensitive[String[1]] $hdp_s3_secret_key = Sensitive('puppetpuppet'),
   String[1] $hdp_s3_facts_bucket = 'facts',
   Boolean $hdp_s3_force_path_style = true,
   Boolean $hdp_s3_disable_ssl = true,
