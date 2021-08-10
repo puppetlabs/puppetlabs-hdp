@@ -76,6 +76,8 @@ class hdp::app_stack::config () {
           'hdp_ui_http_port'        => $hdp::app_stack::hdp_ui_http_port,
           'hdp_ui_https_port'       => $hdp::app_stack::hdp_ui_https_port,
           'hdp_query_port'          => $hdp::app_stack::hdp_query_port,
+          'hdp_query_username'      => $hdp::app_stack::hdp_query_username,
+          'hdp_query_password'      => $hdp::app_stack::hdp_query_password,
 
           'hdp_manage_s3'           => $hdp::app_stack::hdp_manage_s3,
           'hdp_s3_endpoint'         => $_final_hdp_s3_endpoint,
