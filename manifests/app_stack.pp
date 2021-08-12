@@ -16,7 +16,7 @@
 # @param [Optional[String[1]]] hdp_query_username
 #   Username to add basic auth to query service
 #
-# @param [Optional[Sensitive[String[1][]] hdp_query_password
+# @param [Optional[Sensitive[String[1]]]] hdp_query_password
 #   Password to add basic auth to query service
 #   Can be a password string, but if it starts with a $,
 #   will be validated using Linux standards - $<algo>$<salt>$<hash>.
