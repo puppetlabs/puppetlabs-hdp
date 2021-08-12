@@ -5,6 +5,8 @@
       Optional[String] $image_repository,
       Integer $hdp_port,
       Integer $hdp_query_port,
+      Optional[String] $hdp_query_username,
+      Optional[Sensitive[String]] $hdp_query_password,
       Integer $hdp_ui_http_port,
       Integer $hdp_ui_https_port,
 
@@ -12,7 +14,7 @@
       String $hdp_s3_endpoint,
       String $hdp_s3_region,
       String $hdp_s3_access_key,
-      String $hdp_s3_secret_key,
+      Sensitive[String] $hdp_s3_secret_key,
       String $hdp_s3_facts_bucket,
       Boolean $hdp_s3_force_path_style,
       Boolean $hdp_s3_disable_ssl,
@@ -20,7 +22,7 @@
       Boolean $hdp_manage_es,
       String $hdp_es_host,
       Optional[String] $hdp_es_username,
-      Optional[String] $hdp_es_password,
+      Optional[Sensitive[String]] $hdp_es_password,
 
       Optional[String] $ca_server,
       Optional[String] $ca_cert_file,
@@ -54,7 +56,7 @@ services:
       - "HDP_BACKENDS_S3_ENDPOINT=<%= $hdp_s3_endpoint %>"
       - "HDP_BACKENDS_S3_REGION=<%= $hdp_s3_region %>"
       - "HDP_BACKENDS_S3_ACCESS_KEY_ID=<%= $hdp_s3_access_key %>"
-      - "HDP_BACKENDS_S3_SECRET_ACCESS_KEY=<%= $hdp_s3_secret_key %>"
+      - "HDP_BACKENDS_S3_SECRET_ACCESS_KEY=<%= unwrap($hdp_s3_secret_key) %>"
       - "HDP_BACKENDS_S3_FACTSBUCKET=<%= $hdp_s3_facts_bucket %>"
       - "HDP_BACKENDS_S3_DISABLESSL=<%= $hdp_s3_disable_ssl %>"
       - "HDP_BACKENDS_S3_S3FORCEPATHSTYLE=<%= $hdp_s3_force_path_style %>"
@@ -66,7 +68,7 @@ services:
       - "HDP_BACKENDS_ES_USERNAME=<%= $hdp_es_username %>"
       <%- } %>
       <%- if $hdp_es_password { %>
-      - "HDP_BACKENDS_ES_PASSWORD=<%= $hdp_es_password %>"
+      - "HDP_BACKENDS_ES_PASSWORD=<%= unwrap($hdp_es_password) %>"
       <%- } %>
       - "HDP_BACKENDS_ES_ENABLED=true"
       - "HDP_BACKENDS_ES_PACKAGES=true"
@@ -90,6 +92,12 @@ services:
       <%- if $ui_ca_cert_file { %>
       - "HDP_HTTP_QUERY_CACERTFILE=<%= $ui_ca_cert_file %>"
       - "HDP_HTTP_QUERY_DISABLE_CLIENT_AUTH=false"
+      <%- } %>
+      <%- if $hdp_query_username { %>
+      - "HDP_HTTP_QUERY_USERNAME=<%= $hdp_query_username %>"
+      <%- } %>
+      <%- if $hdp_query_password { %>
+      - "HDP_HTTP_QUERY_PASSWORD=<%= unwrap($hdp_query_password) %>"
       <%- } %>
       - "HDP_HTTP_QUERY_NO_TLS=<%= !$ui_use_tls %>"
       <%- if $ui_key_file { %>
@@ -143,7 +151,7 @@ services:
     user: "<%= $hdp_user %>:<%= $hdp_user %>"
     environment:
       - "MINIO_ACCESS_KEY=<%= $hdp_s3_access_key %>"
-      - "MINIO_SECRET_KEY=<%= $hdp_s3_secret_key %>"
+      - "MINIO_SECRET_KEY=<%= unwrap($hdp_s3_secret_key) %>"
     volumes:
       - "<%= $root_dir %>/minio/data:/data"
       - "<%= $root_dir %>/minio/config/.minio"

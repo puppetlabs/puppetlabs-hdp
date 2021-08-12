@@ -183,6 +183,23 @@ describe 'hdp::app_stack' do
             .with_content(%r{hub.docker.com/ui-frontend:foo})
         }
       end
+
+      context 'set username + password' do
+        let(:params) do
+          {
+            'dns_name' => 'hdp.test.com',
+            'hdp_query_username' => 'super-user',
+            'hdp_query_password' => sensitive('admin-password'),
+          }
+        end
+
+        it { is_expected.to compile.with_all_deps }
+        it {
+          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+            .with_content(%r{- "HDP_HTTP_QUERY_USERNAME=super-user"})
+            .with_content(%r{- "HDP_HTTP_QUERY_PASSWORD=admin-password"})
+        }
+      end
     end
   end
 end

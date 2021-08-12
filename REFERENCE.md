@@ -6,13 +6,21 @@
 
 ### Classes
 
+#### Public Classes
+
 * [`hdp::app_stack`](#hdpapp_stack): This class takes care of configuring a node to run HDP.
 * [`hdp::data_processor`](#hdpdata_processor): Simple class to enable the HDP data processor
 * [`hdp::resource_collector`](#hdpresource_collector): This class adds module to the node, which adds our custom facts. Without it, we don't have the ability to pull all ral resources
 
+#### Private Classes
+
+* `hdp::app_stack::config`
+* `hdp::app_stack::install`
+* `hdp::app_stack::service`
+
 ### Data types
 
-* [`HDP::Url`](#hdpurl)
+* [`HDP::Url`](#hdpurl): HDP::Url is a metatype that supports both single and multiple urls
 
 ### Tasks
 
@@ -28,7 +36,7 @@ This class takes care of configuring a node to run HDP.
 
 #### Examples
 
-##### Use defalts or configure via Hiera
+##### Configure via Hiera
 
 ```puppet
 include hdp::app_stack
@@ -40,8 +48,32 @@ include hdp::app_stack
 realize(Group['docker'])
 
 class { 'hdp::app_stack':
+  dns_name            => 'http://hdp-app.example.com',
   create_docker_group => false,
   require             => Group['docker'],
+}
+```
+
+##### Enable TLS using puppet-managed certs on the frontend
+
+```puppet
+class { 'hdp::app_stack':
+  dns_name     => 'http://hdp-app.example.com',
+  ui_use_tls   => true,
+  ui_key_file  => $profile::ssl::hdp_keyfile,
+  ui_cert_file => $profile::ssl::hdp_full_chain,
+}
+```
+
+##### Enable TLS using manually managed certs on the frontend
+
+```puppet
+class { 'hdp::app_stack':
+  dns_name                     => 'http://hdp-app.example.com',
+  ui_use_tls                   => true,
+  ui_cert_files_puppet_managed => false,
+  ui_key_file                  => '/etc/pki/private/hdp-app.key',
+  ui_cert_file                 => '/etc/pki/certs/full-chain.crt',
 }
 ```
 
@@ -53,6 +85,8 @@ The following parameters are available in the `hdp::app_stack` class:
 * [`manage_docker`](#manage_docker)
 * [`hdp_port`](#hdp_port)
 * [`hdp_query_port`](#hdp_query_port)
+* [`hdp_query_username`](#hdp_query_username)
+* [`hdp_query_password`](#hdp_query_password)
 * [`hdp_ui_http_port`](#hdp_ui_http_port)
 * [`hdp_ui_https_port`](#hdp_ui_https_port)
 * [`hdp_manage_es`](#hdp_manage_es)
@@ -86,9 +120,8 @@ The following parameters are available in the `hdp::app_stack` class:
 * [`ui_version`](#ui_version)
 * [`frontend_version`](#frontend_version)
 * [`log_driver`](#log_driver)
-* [`Optional[Array[String[1]]]`](#Optional[Array[String[1]]])
-* [`max_es_memory`](#max_es_memory)
 * [`docker_users`](#docker_users)
+* [`max_es_memory`](#max_es_memory)
 
 ##### <a name="create_docker_group"></a>`create_docker_group`
 
@@ -121,6 +154,25 @@ Data type: `Integer`
 Port to access HDP query service
 
 Default value: `9092`
+
+##### <a name="hdp_query_username"></a>`hdp_query_username`
+
+Data type: `Optional[String[1]]`
+
+Username to add basic auth to query service
+
+Default value: ``undef``
+
+##### <a name="hdp_query_password"></a>`hdp_query_password`
+
+Data type: `Optional[Sensitive[String[1]]]`
+
+Password to add basic auth to query service
+Can be a password string, but if it starts with a $,
+will be validated using Linux standards - $<algo>$<salt>$<hash>.
+Only algos of sha256 and sha512 are valid - $5$ and $6$. All other passwords will always be rejected.
+
+Default value: ``undef``
 
 ##### <a name="hdp_ui_http_port"></a>`hdp_ui_http_port`
 
@@ -166,7 +218,7 @@ Default value: ``undef``
 
 ##### <a name="hdp_es_password"></a>`hdp_es_password`
 
-Data type: `Optional[String[1]]`
+Data type: `Optional[Sensitive[String[1]]]`
 
 Password to use to connect to elasticsearch
 
@@ -207,11 +259,11 @@ Default value: `'puppet'`
 
 ##### <a name="hdp_s3_secret_key"></a>`hdp_s3_secret_key`
 
-Data type: `String[1]`
+Data type: `Sensitive[String[1]]`
 
 The S3 Secret Key to use
 
-Default value: `'puppetpuppet'`
+Default value: `Sensitive('puppetpuppet')`
 
 ##### <a name="hdp_s3_facts_bucket"></a>`hdp_s3_facts_bucket`
 
@@ -409,13 +461,13 @@ The log driver Docker will use
 
 Default value: `'journald'`
 
-##### <a name="Optional[Array[String[1]]]"></a>`Optional[Array[String[1]]]`
+##### <a name="docker_users"></a>`docker_users`
 
-Data type: `Optional[Array[String[1]]] docker_users
-Users to be added to the docker group on the system`
+Data type: `Optional[Array[String[1]]]`
 
-docker_users
 Users to be added to the docker group on the system
+
+Default value: ``undef``
 
 ##### <a name="max_es_memory"></a>`max_es_memory`
 
@@ -426,67 +478,78 @@ Example: 4G, 1024M. Defaults to 4G.
 
 Default value: `'4G'`
 
-##### <a name="docker_users"></a>`docker_users`
-
-Data type: `Optional[Array[String[1]]]`
-
-
-
-Default value: ``undef``
-
 ### <a name="hdpdata_processor"></a>`hdp::data_processor`
 
 Simple class to enable the HDP data processor
 
 #### Examples
 
+##### Configuration in a manifest with default port
+
+```puppet
+# Settings applied to both a primary and compilers
+class { 'profile::primary_and_compilers':
+  class { 'hdp::data_processor':
+    hdp_url => 'https://hdp.example.com:9091',
+  }
+}
+```
+
+##### Configuration in a manifest with two HDP instances
+
+```puppet
+# Settings applied to both a primary and compilers
+class { 'profile::primary_and_compilers':
+  class { 'hdp::data_processor':
+    hdp_url =>
+      'https://hdp-prod.example.com:9091',
+      'https://hdp-staging.example.com:9091',
+    ],
+  }
+}
+```
+
+##### Configuration in a manifest using PupeptDB instead of a facts terminus
+
+```puppet
+# Settings applied to both a primary and compilers
+class { 'profile::primary_and_compilers':
+  class { 'hdp::data_processor':
+    hdp_url           => 'https://hdp.example.com:9091',
+    collection_method => 'pdb_submit_only_server_urls',
+  }
+}
+```
+
+##### Configuration in a manifest using PupeptDB and an additional submit_only_server
+
+```puppet
+# Settings applied to both a primary and compilers
+class { 'profile::primary_and_compilers':
+  class { 'hdp::data_processor':
+    hdp_url                     => 'https://hdp.example.com:9091',
+    collection_method           => 'pdb_submit_only_server_urls',
+    pdb_submit_only_server_urls => [
+      'https://additional-destination.example.com',
+    ],
+  }
+}
+```
+
 ##### Configuration via Hiera with default port
 
 ```puppet
 ---
-hdp::data_processor::hdp_url: 'https://hdp.example.com/in'
-hdp::data_processor::pe_console: 'pe-console.example.com'
+hdp::data_processor::hdp_url: 'https://hdp.example.com:9091'
 ```
 
-##### Configuration via Hiera with custom port
-
-```puppet
----
-hdp::data_processor::hdp_url: 'https://hdp.example.com:9091/in'
-hdp::data_processor::pe_console: 'pe-console.example.com'
-```
-
-##### Configuration in a manifest with default port
-
-```puppet
-# Settings applied to both a master and compilers
-class { 'profile::masters_and_compilers':
-  class { 'hdp::data_processor':
-    hdp_url  => 'https://hdp.example.com/in',
-    pe_console => 'pe-console.example.com',
-  }
-}
-```
-
-##### Configuration in a manifest with custom port
-
-```puppet
-# Settings applied to both a master and compilers
-class { 'profile::masters_and_compilers':
-  class { 'hdp::data_processor':
-    hdp_url  => 'https://hdp.example.com:9091/in',
-    pe_console => 'pe-console.example.com',
-  }
-}
-```
-
-##### Send data to two HDP servers
+##### Configuration via Hiera sending data to two HDP servers
 
 ```puppet
 ---
 hdp::data_processor::hdp_url:
-  - 'https://hdp-prod.example.com:9091/in'
-  - 'https://hdp-staging.example.com:9091/in'
+  - 'https://hdp-prod.example.com:9091'
+  - 'https://hdp-staging.example.com:9091'
 ```
 
 #### Parameters
@@ -494,29 +557,22 @@ hdp::data_processor::hdp_url:
 The following parameters are available in the `hdp::data_processor` class:
 
 * [`hdp_url`](#hdp_url)
-* [`extra_hdp_urls`](#extra_hdp_urls)
 * [`enable_reports`](#enable_reports)
 * [`manage_routes`](#manage_routes)
+* [`manage_pdb_submit_only_server_urls`](#manage_pdb_submit_only_server_urls)
+* [`collection_method`](#collection_method)
 * [`facts_terminus`](#facts_terminus)
 * [`facts_cache_terminus`](#facts_cache_terminus)
 * [`collect_resources`](#collect_resources)
 * [`keep_node_re`](#keep_node_re)
 * [`reports`](#reports)
+* [`pdb_submit_only_server_urls`](#pdb_submit_only_server_urls)
 
 ##### <a name="hdp_url"></a>`hdp_url`
 
 Data type: `HDP::Url`
 
 The url to send data to.
-
-##### <a name="extra_hdp_urls"></a>`extra_hdp_urls`
-
-Data type: `Array[HDP::Url]`
-
-Extra HDP urls to send data to.
-Most common use case is 1 hdp.
-
-Default value: `[]`
 
 ##### <a name="enable_reports"></a>`enable_reports`
 
@@ -533,6 +589,30 @@ Data type: `Boolean`
 Enable managing the HDP routes file
 
 Default value: ``true``
+
+##### <a name="manage_pdb_submit_only_server_urls"></a>`manage_pdb_submit_only_server_urls`
+
+Data type: `Boolean`
+
+This setting will allow the `submit_only_server_urls` setting in
+`puppet.com` to be set when
+`$collection_method = 'pdb_submit_only_server_urls'` and will allow the
+setting to be removed when `$collection_method = 'facts_terminus'`.
+
+Default value: ``true``
+
+##### <a name="collection_method"></a>`collection_method`
+
+Data type: `Enum['facts_terminus', 'pdb_submit_only_server_urls']`
+
+Determine how the HDP will get its data. When set to `facts_terminus`, this
+module will setup a new facts terminus to send data. This is the preferred
+method. When set to `pdb_submit_only_server_urls`, this module will utlize
+the `submit_only_server_urls` setting of PuppetDB to have it send data as
+if the HDP server was another instance of PuppetDB. This method should only
+be used when the facts terminus method cannot be.
+
+Default value: `'facts_terminus'`
 
 ##### <a name="facts_terminus"></a>`facts_terminus`
 
@@ -574,6 +654,17 @@ A string containg the list of report processors to enable
 
 Default value: `'puppetdb,hdp'`
 
+##### <a name="pdb_submit_only_server_urls"></a>`pdb_submit_only_server_urls`
+
+Data type: `Optional[Array[Stdlib::HTTPSUrl]]`
+
+An array of PuppetDB instance URLs, including port number, to which
+commands should be sent, but which shouldn’t ever be queried for data
+needed during a Puppet run. This setting will use the value of `$hdp_url`
+unless another value is provided.
+
+Default value: ``undef``
+
 ### <a name="hdpresource_collector"></a>`hdp::resource_collector`
 
 This class adds module to the node, which adds our custom facts.
@@ -583,7 +674,7 @@ Without it, we don't have the ability to pull all ral resources
 
 ### <a name="hdpurl"></a>`HDP::Url`
 
-The HDP::Url data type.
+HDP::Url is a metatype that supports both single and multiple urls
 
 Alias of
 
