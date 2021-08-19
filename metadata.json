@@ -1,6 +1,6 @@
 {
   "name": "puppetlabs-hdp",
-  "version": "0.0.1-alpha.1",
+  "version": "0.0.1",
   "author": "jpc",
   "summary": "Configures Historical Data Platform",
   "license": "Apache-2.0",
