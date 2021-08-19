@@ -41,6 +41,7 @@
       String $hdp_user,
       String $root_dir,
       String $max_es_memory,
+      String $prometheus_namespace,
 | -%>
 version: "3"
 services:
@@ -106,6 +107,7 @@ services:
       <%- if $ui_cert_file { %>
       - "HDP_HTTP_QUERY_CERT_FILE=<%= $ui_cert_file %>"
       <%- } %>
+      - "HDP_ADMIN_PROMETHEUS_NAMESPACE=<%= $prometheus_namespace %>"
     links:
       - redis
       <%- if $hdp_manage_es { %>
