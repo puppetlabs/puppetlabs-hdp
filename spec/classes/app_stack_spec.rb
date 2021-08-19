@@ -24,7 +24,7 @@ describe 'hdp::app_stack' do
             .with_group('docker')
             .with_content(%r{NAME=hdp\.test\.com})
             .with_content(%r{- "80:80"})
-            .without_content(%r{- "443:443"})
+            .with_content(%r{- "443:443"})
         }
         dir_list = [
           '/opt/puppetlabs/hdp',
@@ -65,6 +65,7 @@ describe 'hdp::app_stack' do
           {
             'dns_name' => 'hdp.test.com',
             'ui_use_tls' => true,
+            'ui_cert_files_puppet_managed' => true,
             'ui_key_file' => '/tmp/ui-cert.key',
             'ui_cert_file' => '/tmp/ui-cert.pem',
           }
@@ -110,6 +111,7 @@ describe 'hdp::app_stack' do
             {
               'dns_name' => 'hdp.test.com',
               'ui_use_tls' => true,
+              'ui_cert_files_puppet_managed' => true,
               'ui_ca_cert_file' => '/tmp/ui-ca.pem',
               'ui_key_file' => '/tmp/ui-cert.key',
               'ui_cert_file' => '/tmp/ui-cert.pem',

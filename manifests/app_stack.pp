@@ -214,8 +214,8 @@ class hdp::app_stack (
   Optional[String[1]] $key_file = undef,
   Optional[String[1]] $cert_file = undef,
 
-  Boolean $ui_use_tls = false,
-  Boolean $ui_cert_files_puppet_managed = true,
+  Boolean $ui_use_tls = true,
+  Boolean $ui_cert_files_puppet_managed = false,
   Optional[String[1]] $ui_ca_cert_file = undef,
   Optional[String[1]] $ui_key_file = undef,
   Optional[String[1]] $ui_cert_file = undef,
