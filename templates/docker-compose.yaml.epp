@@ -81,14 +81,13 @@ services:
       - "HDP_HTTP_UPLOAD_CACERTFILE=<%= $ca_cert_file %>"
       <%- } %>
       <%- if $key_file { %>
-      - "HDP_HTTP_UPLOAD_KEY_FILE=<%= $key_file%>"
+      - "HDP_HTTP_UPLOAD_KEYFILE=<%= $key_file%>"
       <%- } %>
       <%- if $cert_file { %>
-      - "HDP_HTTP_UPLOAD_CERT_FILE=<%= $cert_file%>"
+      - "HDP_HTTP_UPLOAD_CERTFILE=<%= $cert_file%>"
       <%- } %>
       - "HDP_DNSNAMES=<%= join($dns_alt_names, ',') %>"
       - "HDP_NAME=<%= $dns_name %>"
-      - "HDP_HTTP_QUERY_NO_TLS=<%= $ui_use_tls %>"
       <%- if $ui_ca_cert_file { %>
       - "HDP_HTTP_QUERY_CACERTFILE=<%= $ui_ca_cert_file %>"
       - "HDP_HTTP_QUERY_DISABLE_CLIENT_AUTH=false"
@@ -101,10 +100,10 @@ services:
       <%- } %>
       - "HDP_HTTP_QUERY_NO_TLS=<%= !$ui_use_tls %>"
       <%- if $ui_key_file { %>
-      - "HDP_HTTP_QUERY_KEY_FILE=<%= $ui_key_file %>"
+      - "HDP_HTTP_QUERY_KEYFILE=<%= $ui_key_file %>"
       <%- } %>
       <%- if $ui_cert_file { %>
-      - "HDP_HTTP_QUERY_CERT_FILE=<%= $ui_cert_file %>"
+      - "HDP_HTTP_QUERY_CERTFILE=<%= $ui_cert_file %>"
       <%- } %>
     links:
       - redis
