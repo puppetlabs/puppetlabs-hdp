@@ -215,6 +215,46 @@ describe 'hdp::app_stack' do
             .with_content(%r{- "HDP_ADMIN_PROMETHEUS_NAMESPACE=foo"})
         }
       end
+
+      context 'set extra hosts' do
+        let(:params) do
+          {
+            'dns_name' => 'hdp.test.com',
+            'prometheus_namespace' => 'foo',
+            'extra_hosts' => { 'foo' => '127.0.0.1', 'bar' => '1.1.1.1' },
+          }
+        end
+
+        it { is_expected.to compile.with_all_deps }
+        it {
+          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+            .with_content(%r{extra_hosts:})
+        }
+        it {
+          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+            .with_content(%r{foo:127\.0\.0\.1})
+        }
+        it {
+          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+            .with_content(%r{bar:1\.1\.1\.1})
+        }
+      end
+
+      context 'no extra hosts' do
+        let(:params) do
+          {
+            'dns_name' => 'hdp.test.com',
+            'prometheus_namespace' => 'foo',
+            'extra_hosts' => {},
+          }
+        end
+
+        it { is_expected.to compile.with_all_deps }
+        it {
+          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+            .without_content(%r{extra_hosts:})
+        }
+      end
     end
   end
 end
