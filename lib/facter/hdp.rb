@@ -29,11 +29,12 @@ Facter.add(:hdp_health) do
         end
 
         out['image_data'] = image_data
-        out['puppet_user'] = Facter::Core::Execution.execute("bash -c \"stat -c '%G' /etc/puppetlabs/puppet/ssl/private_keys/#{Facter.value('fqdn')}.pem | xargs id -u\"").to_i
-        out
       rescue # rubocop:disable Lint/HandleExceptions
       end
     end
+
+    out['puppet_user'] = Facter::Core::Execution.execute("bash -c \"stat -c '%G' /etc/puppetlabs/puppet/ssl/private_keys/#{Facter.value('fqdn')}.pem | xargs id -u\"").to_i
+    out
   end
 end
 

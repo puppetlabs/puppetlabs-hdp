@@ -2,7 +2,7 @@
 class hdp::app_stack::config () {
   $_mount_host_certs = $trusted['certname'] == $hdp::app_stack::dns_name
   if $_mount_host_certs {
-    $_final_hdp_user = validate_string($facts['hdp_health']['puppet_user'])
+    $_final_hdp_user = pick("${facts.dig('hdp_health', 'puppet_user')}", '0')
   } else {
     $_final_hdp_user = $hdp::app_stack::hdp_user
   }
