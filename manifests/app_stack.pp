@@ -156,6 +156,10 @@
 #   The HDP data service exposes some internal prometheus metrics.
 #   This variable can be used to change the HDP's prom metric namespace.
 #
+# @param [Hash[String[1], String[1]]] extra_hosts
+#    This parameter can be used to set hostname mappings in docker-compose file.
+#    Can be used to mimic the /etc/hosts techniques commonly used in puppet.
+#
 # @example Configure via Hiera
 #   include hdp::app_stack
 #
@@ -237,6 +241,7 @@ class hdp::app_stack (
   String[1] $log_driver = 'journald',
   String[1] $max_es_memory = '4G',
   String[1] $prometheus_namespace = 'hdp',
+  Hash[String[1], String[1]] $extra_hosts = {},
 ) {
   contain hdp::app_stack::install
   contain hdp::app_stack::config
