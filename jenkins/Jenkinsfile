@@ -51,6 +51,11 @@ pipeline {
             }
         }
         stage('Accept') {
+            when {
+                not {
+                    changeRequest()
+                }
+            }
             steps {
                 script {
                     Utils.pushToTests("module", BRANCH_NAME, GIT_TAG)
