@@ -108,6 +108,8 @@ class hdp::app_stack::config () {
           'hdp_user'                => $_final_hdp_user,
           'root_dir'                => '/opt/puppetlabs/hdp',
           'max_es_memory'           => $hdp::app_stack::max_es_memory,
+          'prometheus_namespace'    => $hdp::app_stack::prometheus_namespace,
+
           'mount_host_certs'        => $_mount_host_certs,
         }
       ),

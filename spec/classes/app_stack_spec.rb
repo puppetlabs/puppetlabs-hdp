@@ -200,6 +200,21 @@ describe 'hdp::app_stack' do
             .with_content(%r{- "HDP_HTTP_QUERY_PASSWORD=admin-password"})
         }
       end
+
+      context 'set prometheus namespace' do
+        let(:params) do
+          {
+            'dns_name' => 'hdp.test.com',
+            'prometheus_namespace' => 'foo',
+          }
+        end
+
+        it { is_expected.to compile.with_all_deps }
+        it {
+          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+            .with_content(%r{- "HDP_ADMIN_PROMETHEUS_NAMESPACE=foo"})
+        }
+      end
     end
   end
 end

@@ -152,6 +152,10 @@
 #   Max memory for ES to use - in JVM -Xmx{$max_es_memory} format.
 #   Example: 4G, 1024M. Defaults to 4G.
 #
+# @param [String[1]] prometheus_namespace
+#   The HDP data service exposes some internal prometheus metrics.
+#   This variable can be used to change the HDP's prom metric namespace.
+#
 # @example Configure via Hiera
 #   include hdp::app_stack
 #
@@ -232,6 +236,7 @@ class hdp::app_stack (
   Optional[String[1]] $frontend_version = undef,
   String[1] $log_driver = 'journald',
   String[1] $max_es_memory = '4G',
+  String[1] $prometheus_namespace = 'hdp',
 ) {
   contain hdp::app_stack::install
   contain hdp::app_stack::config
