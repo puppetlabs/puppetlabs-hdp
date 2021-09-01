@@ -37,34 +37,3 @@ Facter.add(:hdp_health) do
     out
   end
 end
-
-Facter.add(:hdp) do
-  setcode do
-    require 'puppet'
-    require 'puppet/indirector/resource/ral'
-    require 'puppet/indirector/request'
-    begin
-      types = []
-      Puppet::Type.eachtype do |t|
-        next if t.name == :component
-        types << t.name.to_s
-      end
-
-      out = {}
-      types.each do |type|
-        begin
-          res = {}
-          raw = Puppet::Resource::Ral.indirection.search("#{type}/")
-          raw.each do |r|
-            res[r.name] = r.parameters
-          end
-          out[type] = res
-        rescue # rubocop:disable Lint/HandleExceptions
-        end
-      end
-      out
-    rescue => err
-      puts err.to_s
-    end
-  end
-end
