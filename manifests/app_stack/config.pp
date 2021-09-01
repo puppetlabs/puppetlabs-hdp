@@ -2,7 +2,7 @@
 class hdp::app_stack::config () {
   $_mount_host_certs = $trusted['certname'] == $hdp::app_stack::dns_name
   if $_mount_host_certs {
-    $_final_hdp_user = validate_string($facts['hdp_health']['puppet_user'])
+    $_final_hdp_user = pick("${facts.dig('hdp_health', 'puppet_user')}", '0')
   } else {
     $_final_hdp_user = $hdp::app_stack::hdp_user
   }
@@ -108,6 +108,9 @@ class hdp::app_stack::config () {
           'hdp_user'                => $_final_hdp_user,
           'root_dir'                => '/opt/puppetlabs/hdp',
           'max_es_memory'           => $hdp::app_stack::max_es_memory,
+          'prometheus_namespace'    => $hdp::app_stack::prometheus_namespace,
+          'extra_hosts'             => $hdp::app_stack::extra_hosts,
+
           'mount_host_certs'        => $_mount_host_certs,
         }
       ),
