@@ -49,6 +49,7 @@ services:
   data:
     image: "<% if $image_repository { %><%= $image_repository %>/<% } %><%= $image_prefix %>data-ingestion:<%= $hdp_version %>"
     user: "<%= $hdp_user %>:<%= $hdp_user %>"
+    restart: "always"
     ports:
       - "<%= $hdp_port %>:9091"
       - "<%= $hdp_query_port %>:8080"
