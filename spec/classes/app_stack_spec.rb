@@ -138,6 +138,34 @@ describe 'hdp::app_stack' do
               )
           }
         end
+
+        context 'with host cert' do
+          let(:pre_condition) do
+            <<-EOS
+              file { "/tmp/ui-ca.pem": ensure => present }
+              file { "/tmp/ui-cert.key": ensure => present }
+              file { "/tmp/ui-cert.pem": ensure => present }
+            EOS
+          end
+          let(:trusted_facts) { { 'certname' => 'true.hdp' } }
+          let(:node) { 'true.hdp' }
+          let(:params) do
+            {
+              'dns_name' => 'true.hdp',
+              'ui_use_tls' => true,
+              'ui_cert_files_puppet_managed' => false,
+              'ui_ca_cert_file' => '/tmp/ui-ca.pem',
+            }
+          end
+
+          it { is_expected.to compile.with_all_deps }
+          it {
+            is_expected.to contain_docker_compose('hdp')
+              .with_compose_files(['/opt/puppetlabs/hdp/docker-compose.yaml'])
+          }
+          it { is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml').with_content(%r{- \"/etc/puppetlabs/puppet/ssl/private_keys/true\.hdp\.pem:/etc/ssl/key\.pem:ro\"}) }
+          it { is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml').with_content(%r{- \"/etc/puppetlabs/puppet/ssl/certs/true\.hdp\.pem:/etc/ssl/cert\.pem:ro\"}) }
+        end
       end
 
       context 'with seperate versions' do
