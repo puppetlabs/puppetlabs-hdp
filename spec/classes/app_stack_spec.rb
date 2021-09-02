@@ -226,7 +226,7 @@ describe 'hdp::app_stack' do
         it { is_expected.to compile.with_all_deps }
         it {
           is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
-            .with_content(%r{- "HDP_HTTP_QUERY_USERNAME=super-user"})
+            .with_content(%r{- "HDP_HTTP_QUERY_USER=super-user"})
             .with_content(%r{- "HDP_HTTP_QUERY_PASSWORD=admin-password"})
         }
       end
