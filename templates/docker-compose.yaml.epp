@@ -96,7 +96,7 @@ services:
       - "HDP_HTTP_QUERY_DISABLE_CLIENT_AUTH=false"
       <%- } %>
       <%- if $hdp_query_username { %>
-      - "HDP_HTTP_QUERY_USERNAME=<%= $hdp_query_username %>"
+      - "HDP_HTTP_QUERY_USER=<%= $hdp_query_username %>"
       <%- } %>
       <%- if $hdp_query_password { %>
       - "HDP_HTTP_QUERY_PASSWORD=<%= unwrap($hdp_query_password) %>"
