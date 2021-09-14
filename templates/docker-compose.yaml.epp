@@ -41,12 +41,15 @@
       String $hdp_user,
       String $root_dir,
       String $max_es_memory,
+      String $prometheus_namespace,
+      Hash[String, String] $extra_hosts,
 | -%>
 version: "3"
 services:
   data:
     image: "<% if $image_repository { %><%= $image_repository %>/<% } %><%= $image_prefix %>data-ingestion:<%= $hdp_version %>"
     user: "<%= $hdp_user %>:<%= $hdp_user %>"
+    restart: "always"
     ports:
       - "<%= $hdp_port %>:9091"
       - "<%= $hdp_query_port %>:8080"
@@ -81,31 +84,31 @@ services:
       - "HDP_HTTP_UPLOAD_CACERTFILE=<%= $ca_cert_file %>"
       <%- } %>
       <%- if $key_file { %>
-      - "HDP_HTTP_UPLOAD_KEY_FILE=<%= $key_file%>"
+      - "HDP_HTTP_UPLOAD_KEYFILE=<%= $key_file%>"
       <%- } %>
       <%- if $cert_file { %>
-      - "HDP_HTTP_UPLOAD_CERT_FILE=<%= $cert_file%>"
+      - "HDP_HTTP_UPLOAD_CERTFILE=<%= $cert_file%>"
       <%- } %>
       - "HDP_DNSNAMES=<%= join($dns_alt_names, ',') %>"
       - "HDP_NAME=<%= $dns_name %>"
-      - "HDP_HTTP_QUERY_NO_TLS=<%= $ui_use_tls %>"
       <%- if $ui_ca_cert_file { %>
       - "HDP_HTTP_QUERY_CACERTFILE=<%= $ui_ca_cert_file %>"
       - "HDP_HTTP_QUERY_DISABLE_CLIENT_AUTH=false"
       <%- } %>
       <%- if $hdp_query_username { %>
-      - "HDP_HTTP_QUERY_USERNAME=<%= $hdp_query_username %>"
+      - "HDP_HTTP_QUERY_USER=<%= $hdp_query_username %>"
       <%- } %>
       <%- if $hdp_query_password { %>
       - "HDP_HTTP_QUERY_PASSWORD=<%= unwrap($hdp_query_password) %>"
       <%- } %>
       - "HDP_HTTP_QUERY_NO_TLS=<%= !$ui_use_tls %>"
       <%- if $ui_key_file { %>
-      - "HDP_HTTP_QUERY_KEY_FILE=<%= $ui_key_file %>"
+      - "HDP_HTTP_QUERY_KEYFILE=<%= $ui_key_file %>"
       <%- } %>
       <%- if $ui_cert_file { %>
-      - "HDP_HTTP_QUERY_CERT_FILE=<%= $ui_cert_file %>"
+      - "HDP_HTTP_QUERY_CERTFILE=<%= $ui_cert_file %>"
       <%- } %>
+      - "HDP_ADMIN_PROMETHEUS_NAMESPACE=<%= $prometheus_namespace %>"
     links:
       - redis
       <%- if $hdp_manage_es { %>
@@ -189,4 +192,10 @@ services:
       - "REACT_APP_QUERY_SERVICE=https://<%= $dns_name %>:<%= $hdp_query_port %>"
 <%- } else { %> 
       - "REACT_APP_QUERY_SERVICE=http://<%= $dns_name %>:<%= $hdp_query_port %>"
+<%- } %>
+<%- if length($extra_hosts) > 0 { %>
+extra_hosts:
+  <%- $extra_hosts.each |$h, $ip| { %>
+  - <%= "${h}:${ip}" %>
+  <%- } -%>
 <%- } %>

@@ -24,7 +24,7 @@ describe 'hdp::app_stack' do
             .with_group('docker')
             .with_content(%r{NAME=hdp\.test\.com})
             .with_content(%r{- "80:80"})
-            .without_content(%r{- "443:443"})
+            .with_content(%r{- "443:443"})
         }
         dir_list = [
           '/opt/puppetlabs/hdp',
@@ -65,6 +65,7 @@ describe 'hdp::app_stack' do
           {
             'dns_name' => 'hdp.test.com',
             'ui_use_tls' => true,
+            'ui_cert_files_puppet_managed' => true,
             'ui_key_file' => '/tmp/ui-cert.key',
             'ui_cert_file' => '/tmp/ui-cert.pem',
           }
@@ -110,6 +111,7 @@ describe 'hdp::app_stack' do
             {
               'dns_name' => 'hdp.test.com',
               'ui_use_tls' => true,
+              'ui_cert_files_puppet_managed' => true,
               'ui_ca_cert_file' => '/tmp/ui-ca.pem',
               'ui_key_file' => '/tmp/ui-cert.key',
               'ui_cert_file' => '/tmp/ui-cert.pem',
@@ -137,6 +139,34 @@ describe 'hdp::app_stack' do
                 ],
               )
           }
+        end
+
+        context 'with host cert' do
+          let(:pre_condition) do
+            <<-EOS
+              file { "/tmp/ui-ca.pem": ensure => present }
+              file { "/tmp/ui-cert.key": ensure => present }
+              file { "/tmp/ui-cert.pem": ensure => present }
+            EOS
+          end
+          let(:trusted_facts) { { 'certname' => 'true.hdp' } }
+          let(:node) { 'true.hdp' }
+          let(:params) do
+            {
+              'dns_name' => 'true.hdp',
+              'ui_use_tls' => true,
+              'ui_cert_files_puppet_managed' => false,
+              'ui_ca_cert_file' => '/tmp/ui-ca.pem',
+            }
+          end
+
+          it { is_expected.to compile.with_all_deps }
+          it {
+            is_expected.to contain_docker_compose('hdp')
+              .with_compose_files(['/opt/puppetlabs/hdp/docker-compose.yaml'])
+          }
+          it { is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml').with_content(%r{- \"/etc/puppetlabs/puppet/ssl/private_keys/true\.hdp\.pem:/etc/ssl/key\.pem:ro\"}) }
+          it { is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml').with_content(%r{- \"/etc/puppetlabs/puppet/ssl/certs/true\.hdp\.pem:/etc/ssl/cert\.pem:ro\"}) }
         end
       end
 
@@ -196,8 +226,63 @@ describe 'hdp::app_stack' do
         it { is_expected.to compile.with_all_deps }
         it {
           is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
-            .with_content(%r{- "HDP_HTTP_QUERY_USERNAME=super-user"})
+            .with_content(%r{- "HDP_HTTP_QUERY_USER=super-user"})
             .with_content(%r{- "HDP_HTTP_QUERY_PASSWORD=admin-password"})
+        }
+      end
+
+      context 'set prometheus namespace' do
+        let(:params) do
+          {
+            'dns_name' => 'hdp.test.com',
+            'prometheus_namespace' => 'foo',
+          }
+        end
+
+        it { is_expected.to compile.with_all_deps }
+        it {
+          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+            .with_content(%r{- "HDP_ADMIN_PROMETHEUS_NAMESPACE=foo"})
+        }
+      end
+
+      context 'set extra hosts' do
+        let(:params) do
+          {
+            'dns_name' => 'hdp.test.com',
+            'prometheus_namespace' => 'foo',
+            'extra_hosts' => { 'foo' => '127.0.0.1', 'bar' => '1.1.1.1' },
+          }
+        end
+
+        it { is_expected.to compile.with_all_deps }
+        it {
+          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+            .with_content(%r{extra_hosts:})
+        }
+        it {
+          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+            .with_content(%r{foo:127\.0\.0\.1})
+        }
+        it {
+          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+            .with_content(%r{bar:1\.1\.1\.1})
+        }
+      end
+
+      context 'no extra hosts' do
+        let(:params) do
+          {
+            'dns_name' => 'hdp.test.com',
+            'prometheus_namespace' => 'foo',
+            'extra_hosts' => {},
+          }
+        end
+
+        it { is_expected.to compile.with_all_deps }
+        it {
+          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+            .without_content(%r{extra_hosts:})
         }
       end
     end

@@ -2,9 +2,13 @@
 class hdp::app_stack::config () {
   $_mount_host_certs = $trusted['certname'] == $hdp::app_stack::dns_name
   if $_mount_host_certs {
-    $_final_hdp_user = validate_string($facts['hdp_health']['puppet_user'])
+    $_final_hdp_user = pick("${facts.dig('hdp_health', 'puppet_user')}", '0')
+    $_final_ui_cert_file = "/etc/puppetlabs/puppet/ssl/certs/${trusted['certname']}.pem"
+    $_final_ui_key_file = "/etc/puppetlabs/puppet/ssl/private_keys/${trusted['certname']}.pem"
   } else {
     $_final_hdp_user = $hdp::app_stack::hdp_user
+    $_final_ui_cert_file =  $hdp::app_stack::ui_cert_file
+    $_final_ui_key_file =  $hdp::app_stack::ui_key_file
   }
 
   $_final_hdp_s3_access_key = $hdp::app_stack::hdp_s3_access_key
@@ -99,8 +103,8 @@ class hdp::app_stack::config () {
           'ca_cert_file'            => $hdp::app_stack::ca_cert_file,
 
           'ui_use_tls'              => $hdp::app_stack::ui_use_tls,
-          'ui_key_file'             => $hdp::app_stack::ui_key_file,
-          'ui_cert_file'            => $hdp::app_stack::ui_cert_file,
+          'ui_key_file'             => $_final_ui_key_file,
+          'ui_cert_file'            => $_final_ui_cert_file,
           'ui_ca_cert_file'         => $hdp::app_stack::ui_ca_cert_file,
 
           'dns_name'                => $hdp::app_stack::dns_name,
@@ -108,6 +112,9 @@ class hdp::app_stack::config () {
           'hdp_user'                => $_final_hdp_user,
           'root_dir'                => '/opt/puppetlabs/hdp',
           'max_es_memory'           => $hdp::app_stack::max_es_memory,
+          'prometheus_namespace'    => $hdp::app_stack::prometheus_namespace,
+          'extra_hosts'             => $hdp::app_stack::extra_hosts,
+
           'mount_host_certs'        => $_mount_host_certs,
         }
       ),
@@ -145,8 +152,8 @@ class hdp::app_stack::config () {
   # If TLS is enabled, ensure certificate files are present before docker does
   # its thing and restart containers if the files change.
   if $hdp::app_stack::ui_use_tls and $hdp::app_stack::ui_cert_files_puppet_managed {
-    File[$hdp::app_stack::ui_key_file] ~> Docker_compose['hdp']
-    File[$hdp::app_stack::ui_cert_file] ~> Docker_compose['hdp']
+    File[$_final_ui_key_file] ~> Docker_compose['hdp']
+    File[$_final_ui_cert_file] ~> Docker_compose['hdp']
 
     if $hdp::app_stack::ui_ca_cert_file {
       File[$hdp::app_stack::ui_ca_cert_file] ~> Docker_compose['hdp']
