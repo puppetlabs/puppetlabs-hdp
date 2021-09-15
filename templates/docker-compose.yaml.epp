@@ -80,6 +80,7 @@ services:
       <%- if $ca_server { %>
       - "HDP_CASERVER=<%= $ca_server %>"
       <%- } %>
+      - "HDP_HTTP_UPLOAD_NO_TLS=false"
       <%- if $ca_cert_file { %>
       - "HDP_HTTP_UPLOAD_CACERTFILE=<%= $ca_cert_file %>"
       <%- } %>
