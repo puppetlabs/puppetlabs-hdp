@@ -51,10 +51,10 @@ class hdp::app_stack::config () {
 
   file {
     default:
-      ensure    => directory,
-      owner     => $_final_hdp_user,
-      group     => $_final_hdp_user,
-      require   => Group['docker'],
+      ensure  => directory,
+      owner   => $_final_hdp_user,
+      group   => $_final_hdp_user,
+      require => Group['docker'],
       ;
     '/opt/puppetlabs/hdp':
       mode  => '0775',
@@ -63,7 +63,7 @@ class hdp::app_stack::config () {
       mode  => '0700',
       ;
     '/opt/puppetlabs/hdp/redis':
-      mode  => '0700',
+      mode    => '0700',
       recurse => true,
       ;
     '/opt/puppetlabs/hdp/docker-compose.yaml':
