@@ -146,19 +146,18 @@ services:
       ## TODO acwrenn - easier to preallocate, but maybe we want some slack here
       - "ES_JAVA_OPTS=-Xms<%= $max_es_memory %> -Xmx<%= $max_es_memory %>"
     volumes:
-      - "<%= $root_dir %>/elastic:/usr/share/elasticsearch/data"
+      - "elastic:/usr/share/elasticsearch/data"
 <%- } %>
 <%- if $hdp_manage_s3 { %>
   minio:
     image: "minio/minio:RELEASE.2021-04-22T15-44-28Z"
     hostname: "minio"
-    user: "<%= $hdp_user %>:<%= $hdp_user %>"
     environment:
       - "MINIO_ACCESS_KEY=<%= $hdp_s3_access_key %>"
       - "MINIO_SECRET_KEY=<%= unwrap($hdp_s3_secret_key) %>"
     volumes:
-      - "<%= $root_dir %>/minio/data:/data"
-      - "<%= $root_dir %>/minio/config/.minio"
+      - "minio-facts:/data/facts"
+      - "minio-config:/.minio"
     command: "server /data"
 <%- } %>
   redis:
@@ -166,7 +165,7 @@ services:
     image: "redis:6.2.4-buster"
     hostname: "redis"
     volumes:
-      - "<%= $root_dir %>/redis:/data"
+      - "redis:/data"
     command: "redis-server --appendonly yes"
   ui-frontend:
     image: "<% if $image_repository { %><%= $image_repository %>/<% } %><%= $image_prefix %>ui-frontend:<%= $frontend_version %>"
@@ -199,3 +198,9 @@ extra_hosts:
   - <%= "${h}:${ip}" %>
   <%- } -%>
 <%- } %>
+volumes:
+  redis:
+  elastic:
+  minio-config:
+  minio-facts:
+
