@@ -62,10 +62,6 @@ class hdp::app_stack::config () {
     '/opt/puppetlabs/hdp/ssl':
       mode  => '0700',
       ;
-    '/opt/puppetlabs/hdp/redis':
-      mode    => '0700',
-      recurse => true,
-      ;
     '/opt/puppetlabs/hdp/docker-compose.yaml':
       ensure  => file,
       mode    => '0440',
@@ -120,34 +116,6 @@ class hdp::app_stack::config () {
         }
       ),
       ;
-  }
-
-  ## Elasticsearch container FS is all 1000
-  ## While not root, this very likely crashes with something with passwordless sudo on the main host
-  ## 100% needs to change when we start deploying our own containers
-  if $hdp::app_stack::hdp_manage_es {
-    file { '/opt/puppetlabs/hdp/elastic':
-      ensure => directory,
-      mode   => '0700',
-      owner  => 1000,
-      group  => 1000,
-    }
-  }
-
-  if $hdp::app_stack::hdp_manage_s3 {
-    $_minio_directories = [
-      '/opt/puppetlabs/hdp/minio',
-      '/opt/puppetlabs/hdp/minio/config',
-      '/opt/puppetlabs/hdp/minio/data',
-      "/opt/puppetlabs/hdp/minio/data/${hdp::app_stack::hdp_s3_facts_bucket}",
-    ]
-
-    file { $_minio_directories:
-      ensure => directory,
-      mode   => '0700',
-      owner  => $_final_hdp_user,
-      group  => $_final_hdp_user,
-    }
   }
 
   # If TLS is enabled, ensure certificate files are present before docker does

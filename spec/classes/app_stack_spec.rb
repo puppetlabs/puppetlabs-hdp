@@ -27,11 +27,6 @@ describe 'hdp::app_stack' do
         }
         dir_list = [
           '/opt/puppetlabs/hdp',
-          '/opt/puppetlabs/hdp/minio',
-          '/opt/puppetlabs/hdp/minio/config',
-          '/opt/puppetlabs/hdp/minio/data',
-          '/opt/puppetlabs/hdp/minio/data/facts',
-          '/opt/puppetlabs/hdp/redis',
           '/opt/puppetlabs/hdp/ssl',
         ]
 
@@ -43,13 +38,6 @@ describe 'hdp::app_stack' do
               .with_group('11223')
           }
         end
-
-        it {
-          is_expected.to contain_file('/opt/puppetlabs/hdp/elastic')
-            .with_ensure('directory')
-            .with_owner('1000')
-            .with_group('1000')
-        }
       end
 
       context 'with ui tls enabled' do
