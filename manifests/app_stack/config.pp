@@ -80,6 +80,10 @@ class hdp::app_stack::config () {
           'hdp_query_username'      => $hdp::app_stack::hdp_query_username,
           'hdp_query_password'      => $hdp::app_stack::hdp_query_password,
 
+          'elasticsearch_image'     => $hdp::app_stack::elasticsearch_image,
+          'redis_image'             => $hdp::app_stack::redis_image,
+          'minio_image'             => $hdp::app_stack::minio_image,
+
           'hdp_manage_s3'           => $hdp::app_stack::hdp_manage_s3,
           'hdp_s3_endpoint'         => $_final_hdp_s3_endpoint,
           'hdp_s3_region'           => $_final_hdp_s3_region,

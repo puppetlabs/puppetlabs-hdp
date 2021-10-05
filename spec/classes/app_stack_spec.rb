@@ -231,44 +231,138 @@ describe 'hdp::app_stack' do
         }
       end
 
-      context 'set extra hosts' do
-        let(:params) do
-          {
-            'dns_name' => 'hdp.test.com',
-            'prometheus_namespace' => 'foo',
-            'extra_hosts' => { 'foo' => '127.0.0.1', 'bar' => '1.1.1.1' },
+      context 'extra hosts' do
+        context 'set extra hosts' do
+          let(:params) do
+            {
+              'dns_name' => 'hdp.test.com',
+              'prometheus_namespace' => 'foo',
+              'extra_hosts' => { 'foo' => '127.0.0.1', 'bar' => '1.1.1.1' },
+            }
+          end
+
+          it { is_expected.to compile.with_all_deps }
+          it {
+            is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+              .with_content(%r{extra_hosts:})
+          }
+          it {
+            is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+              .with_content(%r{foo:127\.0\.0\.1})
+          }
+          it {
+            is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+              .with_content(%r{bar:1\.1\.1\.1})
           }
         end
 
-        it { is_expected.to compile.with_all_deps }
-        it {
-          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
-            .with_content(%r{extra_hosts:})
-        }
-        it {
-          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
-            .with_content(%r{foo:127\.0\.0\.1})
-        }
-        it {
-          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
-            .with_content(%r{bar:1\.1\.1\.1})
-        }
+        context 'no extra hosts' do
+          let(:params) do
+            {
+              'dns_name' => 'hdp.test.com',
+              'prometheus_namespace' => 'foo',
+              'extra_hosts' => {},
+            }
+          end
+
+          it { is_expected.to compile.with_all_deps }
+          it {
+            is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+              .without_content(%r{extra_hosts:})
+          }
+        end
       end
 
-      context 'no extra hosts' do
-        let(:params) do
-          {
-            'dns_name' => 'hdp.test.com',
-            'prometheus_namespace' => 'foo',
-            'extra_hosts' => {},
-          }
+      context 'infra images' do
+        context 'redis' do
+          context 'default' do
+            let(:params) do
+              {
+                'dns_name' => 'hdp.test.com',
+              }
+            end
+
+            it { is_expected.to compile.with_all_deps }
+            it {
+              is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+                .with_content(%r{image: "redis:6.2.4-buster"}) ## Tests will break if image updates. Good or bad? Leaning good.
+            }
+          end
+          context 'set' do
+            let(:params) do
+              {
+                'dns_name' => 'hdp.test.com',
+                'redis_image' => 'test/redis:latest',
+              }
+            end
+
+            it { is_expected.to compile.with_all_deps }
+            it {
+              is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+                .with_content(%r{image: "test/redis:latest"})
+            }
+          end
         end
 
-        it { is_expected.to compile.with_all_deps }
-        it {
-          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
-            .without_content(%r{extra_hosts:})
-        }
+        context 'elasticsearch' do
+          context 'default' do
+            let(:params) do
+              {
+                'dns_name' => 'hdp.test.com',
+              }
+            end
+
+            it { is_expected.to compile.with_all_deps }
+            it {
+              is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+                .with_content(%r{image: "docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.1"})
+            }
+          end
+          context 'set' do
+            let(:params) do
+              {
+                'dns_name' => 'hdp.test.com',
+                'elasticsearch_image' => 'test/es:latest',
+              }
+            end
+
+            it { is_expected.to compile.with_all_deps }
+            it {
+              is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+                .with_content(%r{image: "test/es:latest"})
+            }
+          end
+        end
+
+        context 'minio' do
+          context 'default' do
+            let(:params) do
+              {
+                'dns_name' => 'hdp.test.com',
+              }
+            end
+
+            it { is_expected.to compile.with_all_deps }
+            it {
+              is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+                .with_content(%r{image: "minio/minio:RELEASE.2021-04-22T15-44-28Z"})
+            }
+          end
+          context 'set' do
+            let(:params) do
+              {
+                'dns_name' => 'hdp.test.com',
+                'minio_image' => 'test/minio:latest',
+              }
+            end
+
+            it { is_expected.to compile.with_all_deps }
+            it {
+              is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+                .with_content(%r{image: "test/minio:latest"})
+            }
+          end
+        end
       end
     end
   end
