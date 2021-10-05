@@ -77,6 +77,18 @@
 #   Image repository to pull images from - defaults to dockerhub.
 #   Can be used for airgapped environments/testing environments
 #
+# @param [String[1]] elasticsearch_image
+#   Elasticsearch image to use. Defaults to:
+#   docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.1
+#
+# @param [String[1]] redis_image
+#   Redis image to use. Defaults to:
+#   redis:6.2.4-buster
+#
+# @param [String[1]] minio_image
+#   Minio image to use. Defaults to:
+#   minio/minio:RELEASE.2021-04-22T15-44-28Z
+#
 # @param [String] image_prefix
 #   Prefix that comes before each image
 #   Can be used for easy name spacing under the same repository
@@ -207,6 +219,10 @@ class hdp::app_stack (
   String[1] $hdp_user = '11223',
   String[1] $compose_version = '1.25.0',
   Optional[String[1]] $image_repository = undef,
+
+  String[1] $elasticsearch_image = 'docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.1',
+  String[1] $redis_image = 'redis:6.2.4-buster',
+  String[1] $minio_image = 'minio/minio:RELEASE.2021-04-22T15-44-28Z',
 
   ## Either one of these two options can be configured
   Optional[String[1]] $ca_server = undef,
