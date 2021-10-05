@@ -161,7 +161,8 @@ services:
     volumes:
       - "minio-data:/data"
       - "minio-config:/.minio"
-    command: "server /data"
+    entrypoint: "sh"
+    command: -c "mkdir -p /data/facts && mkdir -p /data/reports && mkdir -p /data/spare && /usr/bin/minio server /data"
 <%- } %>
   redis:
     image: "<%= $redis_image %>"
