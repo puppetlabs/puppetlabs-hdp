@@ -49,6 +49,23 @@ class hdp::app_stack::config () {
     $_final_frontend_version = $hdp::app_stack::frontend_version
   }
 
+  if $hdp::app_stack::hdp_query_auth == 'basic_auth' {
+    if $hdp::app_stack::hdp_query_username == undef {
+      fail()
+    }
+    if $hdp::app_stack::hdp_query_password == undef {
+      fail()
+    }
+  }
+  if $hdp::app_stack::hdp_query_auth == 'oidc' {
+    if $hdp::app_stack::hdp_query_oidc_issuer == undef {
+      fail()
+    }
+    if $hdp::app_stack::hdp_query_oidc_client_id == undef {
+      fail()
+    }
+  }
+
   file {
     default:
       ensure  => directory,
@@ -68,55 +85,60 @@ class hdp::app_stack::config () {
       owner   => 'root',
       group   => 'docker',
       content => epp('hdp/docker-compose.yaml.epp', {
-          'hdp_version'             => $hdp::app_stack::hdp_version,
-          'ui_version'              => $_final_ui_version,
-          'frontend_version'        => $_final_frontend_version,
-          'image_prefix'            => $hdp::app_stack::image_prefix,
-          'image_repository'        => $hdp::app_stack::image_repository,
-          'hdp_port'                => $hdp::app_stack::hdp_port,
-          'hdp_ui_http_port'        => $hdp::app_stack::hdp_ui_http_port,
-          'hdp_ui_https_port'       => $hdp::app_stack::hdp_ui_https_port,
-          'hdp_query_port'          => $hdp::app_stack::hdp_query_port,
-          'hdp_query_username'      => $hdp::app_stack::hdp_query_username,
-          'hdp_query_password'      => $hdp::app_stack::hdp_query_password,
+          'hdp_version'              => $hdp::app_stack::hdp_version,
+          'ui_version'               => $_final_ui_version,
+          'frontend_version'         => $_final_frontend_version,
+          'image_prefix'             => $hdp::app_stack::image_prefix,
+          'image_repository'         => $hdp::app_stack::image_repository,
+          'hdp_port'                 => $hdp::app_stack::hdp_port,
+          'hdp_ui_http_port'         => $hdp::app_stack::hdp_ui_http_port,
+          'hdp_ui_https_port'        => $hdp::app_stack::hdp_ui_https_port,
+          'hdp_query_port'           => $hdp::app_stack::hdp_query_port,
 
-          'elasticsearch_image'     => $hdp::app_stack::elasticsearch_image,
-          'redis_image'             => $hdp::app_stack::redis_image,
-          'minio_image'             => $hdp::app_stack::minio_image,
+          'hdp_query_auth'           => $hdp::app_stack::hdp_query_auth,
+          'hdp_query_username'       => $hdp::app_stack::hdp_query_username,
+          'hdp_query_password'       => $hdp::app_stack::hdp_query_password,
+          'hdp_query_oidc_issuer'    => $hdp::app_stack::hdp_query_oidc_issuer,
+          'hdp_query_oidc_client_id' => $hdp::app_stack::hdp_query_oidc_client_id,
+          'hdp_query_oidc_audience'  => '',
 
-          'hdp_manage_s3'           => $hdp::app_stack::hdp_manage_s3,
-          'hdp_s3_endpoint'         => $_final_hdp_s3_endpoint,
-          'hdp_s3_region'           => $_final_hdp_s3_region,
-          'hdp_s3_access_key'       => $_final_hdp_s3_access_key,
-          'hdp_s3_secret_key'       => $_final_hdp_s3_secret_key,
-          'hdp_s3_disable_ssl'      => $_final_hdp_s3_disable_ssl,
-          'hdp_s3_facts_bucket'     => $_final_hdp_s3_facts_bucket,
-          'hdp_s3_force_path_style' => $_final_hdp_s3_force_path_style,
+          'elasticsearch_image'      => $hdp::app_stack::elasticsearch_image,
+          'redis_image'              => $hdp::app_stack::redis_image,
+          'minio_image'              => $hdp::app_stack::minio_image,
 
-          'hdp_manage_es'           => $hdp::app_stack::hdp_manage_es,
-          'hdp_es_host'             => $_final_hdp_es_host,
-          'hdp_es_username'         => $_final_hdp_es_username,
-          'hdp_es_password'         => $_final_hdp_es_password,
+          'hdp_manage_s3'            => $hdp::app_stack::hdp_manage_s3,
+          'hdp_s3_endpoint'          => $_final_hdp_s3_endpoint,
+          'hdp_s3_region'            => $_final_hdp_s3_region,
+          'hdp_s3_access_key'        => $_final_hdp_s3_access_key,
+          'hdp_s3_secret_key'        => $_final_hdp_s3_secret_key,
+          'hdp_s3_disable_ssl'       => $_final_hdp_s3_disable_ssl,
+          'hdp_s3_facts_bucket'      => $_final_hdp_s3_facts_bucket,
+          'hdp_s3_force_path_style'  => $_final_hdp_s3_force_path_style,
 
-          'ca_server'               => $hdp::app_stack::ca_server,
-          'key_file'                => $hdp::app_stack::key_file,
-          'cert_file'               => $hdp::app_stack::cert_file,
-          'ca_cert_file'            => $hdp::app_stack::ca_cert_file,
+          'hdp_manage_es'            => $hdp::app_stack::hdp_manage_es,
+          'hdp_es_host'              => $_final_hdp_es_host,
+          'hdp_es_username'          => $_final_hdp_es_username,
+          'hdp_es_password'          => $_final_hdp_es_password,
 
-          'ui_use_tls'              => $hdp::app_stack::ui_use_tls,
-          'ui_key_file'             => $_final_ui_key_file,
-          'ui_cert_file'            => $_final_ui_cert_file,
-          'ui_ca_cert_file'         => $hdp::app_stack::ui_ca_cert_file,
+          'ca_server'                => $hdp::app_stack::ca_server,
+          'key_file'                 => $hdp::app_stack::key_file,
+          'cert_file'                => $hdp::app_stack::cert_file,
+          'ca_cert_file'             => $hdp::app_stack::ca_cert_file,
 
-          'dns_name'                => $hdp::app_stack::dns_name,
-          'dns_alt_names'           => $hdp::app_stack::dns_alt_names,
-          'hdp_user'                => $_final_hdp_user,
-          'root_dir'                => '/opt/puppetlabs/hdp',
-          'max_es_memory'           => $hdp::app_stack::max_es_memory,
-          'prometheus_namespace'    => $hdp::app_stack::prometheus_namespace,
-          'extra_hosts'             => $hdp::app_stack::extra_hosts,
+          'ui_use_tls'               => $hdp::app_stack::ui_use_tls,
+          'ui_key_file'              => $_final_ui_key_file,
+          'ui_cert_file'             => $_final_ui_cert_file,
+          'ui_ca_cert_file'          => $hdp::app_stack::ui_ca_cert_file,
 
-          'mount_host_certs'        => $_mount_host_certs,
+          'dns_name'                 => $hdp::app_stack::dns_name,
+          'dns_alt_names'            => $hdp::app_stack::dns_alt_names,
+          'hdp_user'                 => $_final_hdp_user,
+          'root_dir'                 => '/opt/puppetlabs/hdp',
+          'max_es_memory'            => $hdp::app_stack::max_es_memory,
+          'prometheus_namespace'     => $hdp::app_stack::prometheus_namespace,
+          'extra_hosts'              => $hdp::app_stack::extra_hosts,
+
+          'mount_host_certs'         => $_mount_host_certs,
         }
       ),
       ;

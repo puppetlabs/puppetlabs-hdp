@@ -5,8 +5,14 @@
       Optional[String] $image_repository,
       Integer $hdp_port,
       Integer $hdp_query_port,
+
+      Enum['basic_auth', 'oidc', 'none'] $hdp_query_auth,
       Optional[String] $hdp_query_username,
       Optional[Sensitive[String]] $hdp_query_password,
+      Optional[String] $hdp_query_oidc_issuer,
+      Optional[String] $hdp_query_oidc_client_id,
+      Optional[String] $hdp_query_oidc_audience,
+
       Integer $hdp_ui_http_port,
       Integer $hdp_ui_https_port,
 
@@ -100,12 +106,19 @@ services:
       - "HDP_HTTP_QUERY_CACERTFILE=<%= $ui_ca_cert_file %>"
       - "HDP_HTTP_QUERY_DISABLE_CLIENT_AUTH=false"
       <%- } %>
+    <%- if $hdp_query_auth == 'basic_auth' or $hdp_query_username { %> ## query_auth is a new parameter, default behavior was basic_auth when username was set.
       <%- if $hdp_query_username { %>
       - "HDP_HTTP_QUERY_USER=<%= $hdp_query_username %>"
       <%- } %>
       <%- if $hdp_query_password { %>
       - "HDP_HTTP_QUERY_PASSWORD=<%= unwrap($hdp_query_password) %>"
       <%- } %>
+    <%- } %>
+    <%- if $hdp_query_auth == 'oidc' { %>  
+      - "HDP_HTTP_QUERY_SSO_ISSUER=<%= $hdp_query_oidc_issuer %>"
+      - "HDP_HTTP_QUERY_SSO_CLIENTID=<%= $hdp_query_oidc_client_id %>"
+      - "HDP_HTTP_QUERY_SSO_AUDIENCE=<%= $hdp_query_oidc_audience %>"
+    <%- } %>
       - "HDP_HTTP_QUERY_NO_TLS=<%= !$ui_use_tls %>"
       <%- if $ui_key_file { %>
       - "HDP_HTTP_QUERY_KEYFILE=<%= $ui_key_file %>"
@@ -190,6 +203,10 @@ services:
     image: "<% if $image_repository { %><%= $image_repository %>/<% } %><%= $image_prefix %>ui:<%= $ui_version %>"
     environment:
       - "PORT=3000"
+<%- if $hdp_query_auth == 'oidc' { %>
+      - "REACT_APP_SSO_ISSUER=<%= $hdp_query_oidc_issuer %>"
+      - "REACT_APP_SSO_CLIENT_ID=<%= $hdp_query_oidc_client_id %>"
+<%- } %>
 <%- if $ui_use_tls { %>
       - "REACT_APP_QUERY_SERVICE=https://<%= $dns_name %>:<%= $hdp_query_port %>"
 <%- } else { %> 
