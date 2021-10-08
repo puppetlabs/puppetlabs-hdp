@@ -13,6 +13,14 @@
 # @param [Integer] hdp_query_port
 #   Port to access HDP query service
 #
+# @param [Enum['basic_auth', 'oidc', 'none']] hdp_query_auth
+#   What format to use for query authentication
+#   'basic_auth' will use hdp_query_username and hdp_query_password to handle auth.
+#   'oidc' will use hdp_query_oidc_issuer and hdp_query_oidc_client_id to handle auth.
+#   'oidc' currently only supports Okta as an authn provider.
+#   'none' uses no auth for queries
+#   Defaults to 'none'
+#
 # @param [Optional[String[1]]] hdp_query_username
 #   Username to add basic auth to query service
 #
@@ -21,6 +29,12 @@
 #   Can be a password string, but if it starts with a $,
 #   will be validated using Linux standards - $<algo>$<salt>$<hash>.
 #   Only algos of sha256 and sha512 are valid - $5$ and $6$. All other passwords will always be rejected.
+#
+# @param [Optional[String[1]]] hdp_query_oidc_issuer
+#   The OIDC issuer. Currently only Okta URLs are supported.
+#
+# @param [Optional[String[1]]] hdp_query_oidc_client_id
+#   The client ID of the app in the OIDC issuer
 #
 # @param [Integer] hdp_ui_http_port
 #   Port to access HDP UI via http
@@ -213,8 +227,12 @@ class hdp::app_stack (
   Integer $hdp_ui_http_port = 80,
   Integer $hdp_ui_https_port = 443,
   Integer $hdp_query_port = 9092,
+
+  Enum['basic_auth', 'oidc', 'none'] $hdp_query_auth = 'none',
   Optional[String[1]] $hdp_query_username = undef,
   Optional[Sensitive[String[1]]] $hdp_query_password = undef,
+  Optional[String[1]] $hdp_query_oidc_issuer = undef,
+  Optional[String[1]] $hdp_query_oidc_client_id = undef,
 
   String[1] $hdp_user = '11223',
   String[1] $compose_version = '1.25.0',

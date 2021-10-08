@@ -199,23 +199,6 @@ describe 'hdp::app_stack' do
         }
       end
 
-      context 'set username + password' do
-        let(:params) do
-          {
-            'dns_name' => 'hdp.test.com',
-            'hdp_query_username' => 'super-user',
-            'hdp_query_password' => sensitive('admin-password'),
-          }
-        end
-
-        it { is_expected.to compile.with_all_deps }
-        it {
-          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
-            .with_content(%r{- "HDP_HTTP_QUERY_USER=super-user"})
-            .with_content(%r{- "HDP_HTTP_QUERY_PASSWORD=admin-password"})
-        }
-      end
-
       context 'set prometheus namespace' do
         let(:params) do
           {
@@ -362,6 +345,92 @@ describe 'hdp::app_stack' do
                 .with_content(%r{image: "test/minio:latest"})
             }
           end
+        end
+      end
+
+      context 'auth' do
+        context 'default' do
+          let(:params) do
+            {
+              'dns_name' => 'hdp.test.com',
+            }
+          end
+
+          it { is_expected.to compile.with_all_deps }
+          it {
+            is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+              .without_content(%r{HDP_HTTP_QUERY_USER=})
+              .without_content(%r{HDP_HTTP_QUERY_PASSWORD=})
+              .without_content(%r{HDP_HTTP_QUERY_SSO_ISSUER=})
+              .without_content(%r{HDP_HTTP_QUERY_SSO_CLIENTID=})
+              .without_content(%r{HDP_HTTP_QUERY_SSO_AUDIENCE=})
+              .without_content(%r{REACT_APP_SSO_ISSUER=})
+              .without_content(%r{REACT_APP_SSO_CLIENT_ID=})
+          }
+        end
+        context 'oidc' do
+          let(:params) do
+            {
+              'dns_name' => 'hdp.test.com',
+              'hdp_query_auth' => 'oidc',
+              'hdp_query_oidc_issuer' => 'foo',
+              'hdp_query_oidc_client_id' => 'bar',
+            }
+          end
+
+          it { is_expected.to compile.with_all_deps }
+          it {
+            is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+              .without_content(%r{HDP_HTTP_QUERY_USER=})
+              .without_content(%r{HDP_HTTP_QUERY_PASSWORD=})
+              .with_content(%r{HDP_HTTP_QUERY_SSO_ISSUER=foo})
+              .with_content(%r{HDP_HTTP_QUERY_SSO_CLIENTID=bar})
+              .with_content(%r{REACT_APP_SSO_ISSUER=foo})
+              .with_content(%r{REACT_APP_SSO_CLIENT_ID=bar})
+          }
+        end
+        context 'basic - specified' do
+          let(:params) do
+            {
+              'dns_name' => 'hdp.test.com',
+              'hdp_query_auth' => 'basic_auth',
+              'hdp_query_username' => 'super-user',
+              'hdp_query_password' => sensitive('admin-password'),
+            }
+          end
+
+          it { is_expected.to compile.with_all_deps }
+          it {
+            is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+              .with_content(%r{- "HDP_HTTP_QUERY_USER=super-user"})
+              .with_content(%r{- "HDP_HTTP_QUERY_PASSWORD=admin-password"})
+              .without_content(%r{HDP_HTTP_QUERY_SSO_ISSUER=})
+              .without_content(%r{HDP_HTTP_QUERY_SSO_CLIENTID=})
+              .without_content(%r{HDP_HTTP_QUERY_SSO_AUDIENCE=})
+              .without_content(%r{REACT_APP_SSO_ISSUER=})
+              .without_content(%r{REACT_APP_SSO_CLIENT_ID=})
+          }
+        end
+        context 'basic - old behavior' do
+          let(:params) do
+            {
+              'dns_name' => 'hdp.test.com',
+              'hdp_query_username' => 'super-user',
+              'hdp_query_password' => sensitive('admin-password'),
+            }
+          end
+
+          it { is_expected.to compile.with_all_deps }
+          it {
+            is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+              .with_content(%r{- "HDP_HTTP_QUERY_USER=super-user"})
+              .with_content(%r{- "HDP_HTTP_QUERY_PASSWORD=admin-password"})
+              .without_content(%r{HDP_HTTP_QUERY_SSO_ISSUER=})
+              .without_content(%r{HDP_HTTP_QUERY_SSO_CLIENTiD=})
+              .without_content(%r{HDP_HTTP_QUERY_SSO_AUDIENCE=})
+              .without_content(%r{REACT_APP_SSO_ISSUER=})
+              .without_content(%r{REACT_APP_SSO_CLIENT_ID=})
+          }
         end
       end
     end
