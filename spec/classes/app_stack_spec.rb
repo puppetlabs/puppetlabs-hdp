@@ -199,19 +199,50 @@ describe 'hdp::app_stack' do
         }
       end
 
-      context 'set prometheus namespace' do
-        let(:params) do
-          {
-            'dns_name' => 'hdp.test.com',
-            'prometheus_namespace' => 'foo',
+      context 'hdp admin config options' do
+        context 'set prometheus namespace' do
+          let(:params) do
+            {
+              'dns_name' => 'hdp.test.com',
+              'prometheus_namespace' => 'foo',
+            }
+          end
+
+          it { is_expected.to compile.with_all_deps }
+          it {
+            is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+              .with_content(%r{- "HDP_ADMIN_PROMETHEUS_NAMESPACE=foo"})
           }
         end
 
-        it { is_expected.to compile.with_all_deps }
-        it {
-          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
-            .with_content(%r{- "HDP_ADMIN_PROMETHEUS_NAMESPACE=foo"})
-        }
+        context 'set access log level - non-default' do
+          let(:params) do
+            {
+              'dns_name' => 'hdp.test.com',
+              'access_log_level' => 'all',
+            }
+          end
+
+          it { is_expected.to compile.with_all_deps }
+          it {
+            is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+              .with_content(%r{- "HDP_ADMIN_ACCESS_LOG_LEVEL=all"})
+          }
+        end
+
+        context 'set access log level - default' do
+          let(:params) do
+            {
+              'dns_name' => 'hdp.test.com',
+            }
+          end
+
+          it { is_expected.to compile.with_all_deps }
+          it {
+            is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+              .with_content(%r{- "HDP_ADMIN_ACCESS_LOG_LEVEL=admin"})
+          }
+        end
       end
 
       context 'extra hosts' do

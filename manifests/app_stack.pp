@@ -182,6 +182,12 @@
 #   The HDP data service exposes some internal prometheus metrics.
 #   This variable can be used to change the HDP's prom metric namespace.
 #
+# @param [Enum['none', 'all', 'admin']] access_log_level
+#    Specify which level of access log the HDP should use.
+#    Defaults to 'admin', where the HDP logs each administrative action taken
+#    and the user behind it.
+#    The option 'all' causes all data queries to be logged.
+#
 # @param [Hash[String[1], String[1]]] extra_hosts
 #    This parameter can be used to set hostname mappings in docker-compose file.
 #    Can be used to mimic the /etc/hosts techniques commonly used in puppet.
@@ -276,6 +282,7 @@ class hdp::app_stack (
   String[1] $log_driver = 'journald',
   String[1] $max_es_memory = '4G',
   String[1] $prometheus_namespace = 'hdp',
+  Enum['none', 'all', 'admin'] $access_log_level = 'admin',
   Hash[String[1], String[1]] $extra_hosts = {},
 ) {
   contain hdp::app_stack::install
