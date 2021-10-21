@@ -52,6 +52,7 @@
       String $root_dir,
       String $max_es_memory,
       String $prometheus_namespace,
+      Enum['all', 'admin', 'none'] $access_log_level,
       Hash[String, String] $extra_hosts,
 | -%>
 version: "3"
@@ -127,6 +128,7 @@ services:
       - "HDP_HTTP_QUERY_CERTFILE=<%= $ui_cert_file %>"
       <%- } %>
       - "HDP_ADMIN_PROMETHEUS_NAMESPACE=<%= $prometheus_namespace %>"
+      - "HDP_ADMIN_ACCESS_LOG_LEVEL=<%= $access_log_level %>"
     links:
       - redis
       <%- if $hdp_manage_es { %>
