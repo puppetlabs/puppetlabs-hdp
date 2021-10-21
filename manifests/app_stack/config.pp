@@ -100,7 +100,7 @@ class hdp::app_stack::config () {
           'hdp_query_password'       => $hdp::app_stack::hdp_query_password,
           'hdp_query_oidc_issuer'    => $hdp::app_stack::hdp_query_oidc_issuer,
           'hdp_query_oidc_client_id' => $hdp::app_stack::hdp_query_oidc_client_id,
-          'hdp_query_oidc_audience'  => '',
+          'hdp_query_oidc_audience'  => $hdp::app_stack::hdp_query_oidc_audience,
 
           'elasticsearch_image'      => $hdp::app_stack::elasticsearch_image,
           'redis_image'              => $hdp::app_stack::redis_image,
