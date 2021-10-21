@@ -60,6 +60,7 @@ class { 'hdp::app_stack':
 class { 'hdp::app_stack':
   dns_name     => 'http://hdp-app.example.com',
   ui_use_tls   => true,
+  ui_cert_files_puppet_managed => true,
   ui_key_file  => $profile::ssl::hdp_keyfile,
   ui_cert_file => $profile::ssl::hdp_full_chain,
 }
@@ -85,8 +86,12 @@ The following parameters are available in the `hdp::app_stack` class:
 * [`manage_docker`](#manage_docker)
 * [`hdp_port`](#hdp_port)
 * [`hdp_query_port`](#hdp_query_port)
+* [`hdp_query_auth`](#hdp_query_auth)
 * [`hdp_query_username`](#hdp_query_username)
 * [`hdp_query_password`](#hdp_query_password)
+* [`hdp_query_oidc_issuer`](#hdp_query_oidc_issuer)
+* [`hdp_query_oidc_client_id`](#hdp_query_oidc_client_id)
+* [`hdp_query_oidc_audience`](#hdp_query_oidc_audience)
 * [`hdp_ui_http_port`](#hdp_ui_http_port)
 * [`hdp_ui_https_port`](#hdp_ui_https_port)
 * [`hdp_manage_es`](#hdp_manage_es)
@@ -104,6 +109,9 @@ The following parameters are available in the `hdp::app_stack` class:
 * [`hdp_user`](#hdp_user)
 * [`compose_version`](#compose_version)
 * [`image_repository`](#image_repository)
+* [`elasticsearch_image`](#elasticsearch_image)
+* [`redis_image`](#redis_image)
+* [`minio_image`](#minio_image)
 * [`image_prefix`](#image_prefix)
 * [`ca_server`](#ca_server)
 * [`ca_cert_file`](#ca_cert_file)
@@ -122,6 +130,9 @@ The following parameters are available in the `hdp::app_stack` class:
 * [`log_driver`](#log_driver)
 * [`docker_users`](#docker_users)
 * [`max_es_memory`](#max_es_memory)
+* [`prometheus_namespace`](#prometheus_namespace)
+* [`access_log_level`](#access_log_level)
+* [`extra_hosts`](#extra_hosts)
 
 ##### <a name="create_docker_group"></a>`create_docker_group`
 
@@ -155,6 +166,19 @@ Port to access HDP query service
 
 Default value: `9092`
 
+##### <a name="hdp_query_auth"></a>`hdp_query_auth`
+
+Data type: `Enum['basic_auth', 'oidc', 'none']`
+
+What format to use for query authentication
+'basic_auth' will use hdp_query_username and hdp_query_password to handle auth.
+'oidc' will use hdp_query_oidc_issuer and hdp_query_oidc_client_id to handle auth.
+'oidc' currently only supports Okta as an authn provider.
+'none' uses no auth for queries
+Defaults to 'none'
+
+Default value: `'none'`
+
 ##### <a name="hdp_query_username"></a>`hdp_query_username`
 
 Data type: `Optional[String[1]]`
@@ -171,6 +195,30 @@ Password to add basic auth to query service
 Can be a password string, but if it starts with a $,
 will be validated using Linux standards - $<algo>$<salt>$<hash>.
 Only algos of sha256 and sha512 are valid - $5$ and $6$. All other passwords will always be rejected.
+
+Default value: ``undef``
+
+##### <a name="hdp_query_oidc_issuer"></a>`hdp_query_oidc_issuer`
+
+Data type: `Optional[String[1]]`
+
+The OIDC issuer. Currently only Okta URLs are supported.
+
+Default value: ``undef``
+
+##### <a name="hdp_query_oidc_client_id"></a>`hdp_query_oidc_client_id`
+
+Data type: `Optional[String]`
+
+The client ID of the app in the OIDC issuer
+
+Default value: ``undef``
+
+##### <a name="hdp_query_oidc_audience"></a>`hdp_query_oidc_audience`
+
+Data type: `Optional[String]`
+
+The audience of the issued OIDC token
 
 Default value: ``undef``
 
@@ -315,6 +363,33 @@ Can be used for airgapped environments/testing environments
 
 Default value: ``undef``
 
+##### <a name="elasticsearch_image"></a>`elasticsearch_image`
+
+Data type: `String[1]`
+
+Elasticsearch image to use. Defaults to:
+docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.1
+
+Default value: `'docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.1'`
+
+##### <a name="redis_image"></a>`redis_image`
+
+Data type: `String[1]`
+
+Redis image to use. Defaults to:
+redis:6.2.4-buster
+
+Default value: `'redis:6.2.4-buster'`
+
+##### <a name="minio_image"></a>`minio_image`
+
+Data type: `String[1]`
+
+Minio image to use. Defaults to:
+minio/minio:RELEASE.2021-04-22T15-44-28Z
+
+Default value: `'minio/minio:RELEASE.2021-04-22T15-44-28Z'`
+
 ##### <a name="image_prefix"></a>`image_prefix`
 
 Data type: `String`
@@ -369,7 +444,7 @@ Data type: `Boolean`
 
 Use TLS for the UI and HDP Query endpoints
 
-Default value: ``false``
+Default value: ``true``
 
 ##### <a name="ui_cert_files_puppet_managed"></a>`ui_cert_files_puppet_managed`
 
@@ -380,7 +455,7 @@ are then a relationship is created between these files and the
 `docker_compose` resource so that containers are restarted when
 the contents of the files change, such as when the certificate is renewed.
 
-Default value: ``true``
+Default value: ``false``
 
 ##### <a name="ui_key_file"></a>`ui_key_file`
 
@@ -477,6 +552,35 @@ Max memory for ES to use - in JVM -Xmx{$max_es_memory} format.
 Example: 4G, 1024M. Defaults to 4G.
 
 Default value: `'4G'`
+
+##### <a name="prometheus_namespace"></a>`prometheus_namespace`
+
+Data type: `String[1]`
+
+The HDP data service exposes some internal prometheus metrics.
+This variable can be used to change the HDP's prom metric namespace.
+
+Default value: `'hdp'`
+
+##### <a name="access_log_level"></a>`access_log_level`
+
+Data type: `Enum['none', 'all', 'admin']`
+
+Specify which level of access log the HDP should use.
+Defaults to 'admin', where the HDP logs each administrative action taken
+and the user behind it.
+The option 'all' causes all data queries to be logged.
+
+Default value: `'admin'`
+
+##### <a name="extra_hosts"></a>`extra_hosts`
+
+Data type: `Hash[String[1], String[1]]`
+
+This parameter can be used to set hostname mappings in docker-compose file.
+Can be used to mimic the /etc/hosts techniques commonly used in puppet.
+
+Default value: `{}`
 
 ### <a name="hdpdata_processor"></a>`hdp::data_processor`
 
