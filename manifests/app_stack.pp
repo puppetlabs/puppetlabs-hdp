@@ -33,8 +33,11 @@
 # @param [Optional[String[1]]] hdp_query_oidc_issuer
 #   The OIDC issuer. Currently only Okta URLs are supported.
 #
-# @param [Optional[String[1]]] hdp_query_oidc_client_id
+# @param [Optional[String]] hdp_query_oidc_client_id
 #   The client ID of the app in the OIDC issuer
+#
+# @param [Optional[String]] hdp_query_oidc_audience
+#   The audience of the issued OIDC token
 #
 # @param [Integer] hdp_ui_http_port
 #   Port to access HDP UI via http
@@ -232,7 +235,8 @@ class hdp::app_stack (
   Optional[String[1]] $hdp_query_username = undef,
   Optional[Sensitive[String[1]]] $hdp_query_password = undef,
   Optional[String[1]] $hdp_query_oidc_issuer = undef,
-  Optional[String[1]] $hdp_query_oidc_client_id = undef,
+  Optional[String] $hdp_query_oidc_client_id = undef,
+  Optional[String] $hdp_query_oidc_audience = undef,
 
   String[1] $hdp_user = '11223',
   String[1] $compose_version = '1.25.0',
