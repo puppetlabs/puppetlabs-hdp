@@ -117,8 +117,8 @@ services:
     <%- } %>
     <%- if $hdp_query_auth == 'oidc' { %>  
       - "HDP_HTTP_QUERY_SSO_ISSUER=<%= $hdp_query_oidc_issuer %>"
-      - "HDP_HTTP_QUERY_SSO_CLIENTID=<%= $hdp_query_oidc_client_id %>"
-      - "HDP_HTTP_QUERY_SSO_AUDIENCE=<%= $hdp_query_oidc_audience %>"
+      - "HDP_HTTP_QUERY_SSO_CLIENTID="
+      - "HDP_HTTP_QUERY_SSO_AUDIENCE=<%= $hdp_query_oidc_client_id %>"
     <%- } %>
       - "HDP_HTTP_QUERY_NO_TLS=<%= !$ui_use_tls %>"
       <%- if $ui_key_file { %>
