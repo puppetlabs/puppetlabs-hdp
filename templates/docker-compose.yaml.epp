@@ -112,7 +112,7 @@ services:
       - "HDP_HTTP_QUERY_USER=<%= $hdp_query_username %>"
       <%- } %>
       <%- if $hdp_query_password { %>
-      - "HDP_HTTP_QUERY_PASSWORD=<%= unwrap($hdp_query_password) %>"
+      - "HDP_HTTP_QUERY_PASSWORD=<%= regsubst(unwrap($hdp_query_password), '\$', '$$', 'G') %>"
       <%- } %>
     <%- } %>
     <%- if $hdp_query_auth == 'oidc' { %>  
