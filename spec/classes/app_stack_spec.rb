@@ -442,6 +442,29 @@ describe 'hdp::app_stack' do
               .without_content(%r{REACT_APP_SSO_CLIENT_ID=})
           }
         end
+
+        context 'basic - specified hash' do
+          let(:params) do
+            {
+              'dns_name' => 'hdp.test.com',
+              'hdp_query_auth' => 'basic_auth',
+              'hdp_query_username' => 'super-user',
+              'hdp_query_password' => sensitive('$6$foo$bar'),
+            }
+          end
+
+          it { is_expected.to compile.with_all_deps }
+          it {
+            is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+              .with_content(%r{- "HDP_HTTP_QUERY_USER=super-user"})
+              .with_content(%r{- "HDP_HTTP_QUERY_PASSWORD=\$\$6\$\$foo\$\$bar"})
+              .without_content(%r{HDP_HTTP_QUERY_SSO_ISSUER=})
+              .without_content(%r{HDP_HTTP_QUERY_SSO_CLIENTID=})
+              .without_content(%r{HDP_HTTP_QUERY_SSO_AUDIENCE=})
+              .without_content(%r{REACT_APP_SSO_ISSUER=})
+              .without_content(%r{REACT_APP_SSO_CLIENT_ID=})
+          }
+        end
         context 'basic - old behavior' do
           let(:params) do
             {
