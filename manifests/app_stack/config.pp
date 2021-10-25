@@ -1,6 +1,12 @@
 # @api private
 class hdp::app_stack::config () {
-  $_mount_host_certs = $trusted['certname'] == $hdp::app_stack::dns_name
+  ## Mount host certs for UI if the dns_name is equal to the host's name, or
+  ## if we set ui_use_tls to true, but don't provide key/cert file paths
+  ## if one of cert or key is provided, don't force certnames
+  $_mount_host_certs = (
+    ($trusted['certname'] == $hdp::app_stack::dns_name)
+    or ($hdp::app_stack::ui_use_tls and !$hdp::app_stack::ui_cert_file and !$hdp::app_stack::ui_key_file)
+  )
   if $_mount_host_certs {
     $_final_hdp_user = pick("${facts.dig('hdp_health', 'puppet_user')}", '0')
     $_final_ui_cert_file = "/etc/puppetlabs/puppet/ssl/certs/${trusted['certname']}.pem"
