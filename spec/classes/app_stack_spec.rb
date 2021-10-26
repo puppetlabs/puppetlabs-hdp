@@ -40,80 +40,84 @@ describe 'hdp::app_stack' do
         end
       end
 
-      context 'with ui tls enabled' do
-        let(:pre_condition) do
-          <<-EOS
-            file { "/tmp/ui-cert.key": ensure => present }
-            file { "/tmp/ui-cert.pem": ensure => present }
-          EOS
-        end
+      context 'ui cert tests' do
+        context 'with ui tls enabled' do
+          let(:pre_condition) do
+            <<-EOS
+              file { "/tmp/ui-cert.key": ensure => present }
+              file { "/tmp/ui-cert.pem": ensure => present }
+            EOS
+          end
 
-        let(:params) do
-          {
-            'dns_name' => 'hdp.test.com',
-            'ui_use_tls' => true,
-            'ui_cert_files_puppet_managed' => true,
-            'ui_key_file' => '/tmp/ui-cert.key',
-            'ui_cert_file' => '/tmp/ui-cert.pem',
+          let(:params) do
+            {
+              'dns_name' => 'hdp.test.com',
+              'ui_use_tls' => true,
+              'ui_cert_files_puppet_managed' => true,
+              'ui_key_file' => '/tmp/ui-cert.key',
+              'ui_cert_file' => '/tmp/ui-cert.pem',
+            }
+          end
+
+          it { is_expected.to compile.with_all_deps }
+          it {
+            is_expected.to contain_docker_compose('hdp')
+              .with_compose_files(['/opt/puppetlabs/hdp/docker-compose.yaml'])
+              .that_requires(
+                [
+                  'File[/tmp/ui-cert.key]',
+                  'File[/tmp/ui-cert.pem]',
+                  'File[/opt/puppetlabs/hdp/docker-compose.yaml]',
+                ],
+              )
+              .that_subscribes_to(
+                [
+                  'File[/tmp/ui-cert.key]',
+                  'File[/tmp/ui-cert.pem]',
+                  'File[/opt/puppetlabs/hdp/docker-compose.yaml]',
+                ],
+              )
+          }
+          it {
+            is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+              .with_content(%r{- "80:80"})
+              .with_content(%r{- "443:443"})
           }
         end
 
-        it { is_expected.to compile.with_all_deps }
-        it {
-          is_expected.to contain_docker_compose('hdp')
-            .with_compose_files(['/opt/puppetlabs/hdp/docker-compose.yaml'])
-            .that_requires(
-              [
-                'File[/tmp/ui-cert.key]',
-                'File[/tmp/ui-cert.pem]',
-                'File[/opt/puppetlabs/hdp/docker-compose.yaml]',
-              ],
-            )
-            .that_subscribes_to(
-              [
-                'File[/tmp/ui-cert.key]',
-                'File[/tmp/ui-cert.pem]',
-                'File[/opt/puppetlabs/hdp/docker-compose.yaml]',
-              ],
-            )
-        }
-        it {
-          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
-            .with_content(%r{- "80:80"})
-            .with_content(%r{- "443:443"})
-        }
-      end
+        context 'with ui tls enabled - default key and cert' do
+          let(:params) do
+            {
+              'dns_name' => 'hdp.test.com',
+              'ui_use_tls' => true,
+            }
+          end
+          let(:node) { 'hdp.example' }
 
-      context 'with ui tls enabled - default key and cert' do
-        let(:params) do
-          {
-            'dns_name' => 'hdp.test.com',
-            'ui_use_tls' => true,
+          ## Make sure this isn't hdp-test
+          it { is_expected.to compile.with_all_deps }
+          it {
+            is_expected.to contain_docker_compose('hdp')
+              .with_compose_files(['/opt/puppetlabs/hdp/docker-compose.yaml'])
+              .that_requires(
+                [
+                  'File[/opt/puppetlabs/hdp/docker-compose.yaml]',
+                ],
+              )
+              .that_subscribes_to(
+                [
+                  'File[/opt/puppetlabs/hdp/docker-compose.yaml]',
+                ],
+              )
+          }
+          it {
+            is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+              .with_content(%r{- "80:80"})
+              .with_content(%r{- "443:443"})
+              .with_content(%r{- ".*hdp\.example.*:/etc/ssl/key\.pem:ro"})
+              .with_content(%r{- ".*hdp\.example.*:/etc/ssl/cert\.pem:ro"})
           }
         end
-
-        it { is_expected.to compile.with_all_deps }
-        it {
-          is_expected.to contain_docker_compose('hdp')
-            .with_compose_files(['/opt/puppetlabs/hdp/docker-compose.yaml'])
-            .that_requires(
-              [
-                'File[/opt/puppetlabs/hdp/docker-compose.yaml]',
-              ],
-            )
-            .that_subscribes_to(
-              [
-                'File[/opt/puppetlabs/hdp/docker-compose.yaml]',
-              ],
-            )
-        }
-        it {
-          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
-            .with_content(%r{- "80:80"})
-            .with_content(%r{- "443:443"})
-            .with_content(%r{- ".+:/etc/ssl/key\.pem:ro"})
-            .with_content(%r{- ".+:/etc/ssl/cert\.pem:ro"})
-        }
 
         context 'with ui_ca_cert_file specified' do
           let(:pre_condition) do
