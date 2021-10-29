@@ -523,6 +523,20 @@ describe 'hdp::app_stack' do
           }
         end
       end
+      context 'dashboard url' do
+        let(:params) do
+          {
+            'dns_name' => 'hdp.test.com',
+            'dashboard_url' => 'https://foo.com',
+          }
+        end
+
+        it { is_expected.to compile.with_all_deps }
+        it {
+          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+            .with_content(%r{HDP_JOBS_DASHBOARD_URL=https://foo\.com})
+        }
+      end
     end
   end
 end

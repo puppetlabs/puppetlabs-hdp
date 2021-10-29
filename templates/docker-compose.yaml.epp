@@ -53,6 +53,7 @@
       String $max_es_memory,
       String $prometheus_namespace,
       Enum['all', 'admin', 'none'] $access_log_level,
+      Optional[Stdlib::HTTPUrl] $dashboard_url,
       Hash[String, String] $extra_hosts,
 | -%>
 version: "3"
@@ -115,11 +116,14 @@ services:
       - "HDP_HTTP_QUERY_PASSWORD=<%= regsubst(unwrap($hdp_query_password), '\$', '$$', 'G') %>"
       <%- } %>
     <%- } %>
-    <%- if $hdp_query_auth == 'oidc' { %>  
-      - "HDP_HTTP_QUERY_SSO_ISSUER=<%= $hdp_query_oidc_issuer %>"
-      - "HDP_HTTP_QUERY_SSO_CLIENTID=<%= $hdp_query_oidc_client_id %>"
-      - "HDP_HTTP_QUERY_SSO_AUDIENCE=<%= $hdp_query_oidc_audience %>"
-    <%- } %>
+      <%- if $hdp_query_auth == 'oidc' { %>  
+        - "HDP_HTTP_QUERY_SSO_ISSUER=<%= $hdp_query_oidc_issuer %>"
+        - "HDP_HTTP_QUERY_SSO_CLIENTID=<%= $hdp_query_oidc_client_id %>"
+        - "HDP_HTTP_QUERY_SSO_AUDIENCE=<%= $hdp_query_oidc_audience %>"
+      <%- } %>
+      <%- if $dashboard_url { %>  
+      - "HDP_JOBS_DASHBOARD_URL=<%= $dashboard_url %>"
+      <%- } %>
       - "HDP_HTTP_QUERY_NO_TLS=<%= !$ui_use_tls %>"
       <%- if $ui_key_file { %>
       - "HDP_HTTP_QUERY_KEYFILE=<%= $ui_key_file %>"

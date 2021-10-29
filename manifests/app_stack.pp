@@ -191,6 +191,12 @@
 #    and the user behind it.
 #    The option 'all' causes all data queries to be logged.
 #
+# @param [Optional[Stdlib::HTTPUrl]] dashboard_url
+#    The URL of the dashboard, where you would visit the UI in your browser.
+#    This parameter is used to configure alerts, so if you plan on using Relay
+#    or another alert handler, you should set this option if you want your links
+#    in your alerts to point you to the right place.
+#
 # @param [Hash[String[1], String[1]]] extra_hosts
 #    This parameter can be used to set hostname mappings in docker-compose file.
 #    Can be used to mimic the /etc/hosts techniques commonly used in puppet.
@@ -287,6 +293,7 @@ class hdp::app_stack (
   String[1] $max_es_memory = '4G',
   String[1] $prometheus_namespace = 'hdp',
   Enum['none', 'all', 'admin'] $access_log_level = 'admin',
+  Optional[Stdlib::HTTPUrl] $dashboard_url = undef,
   Hash[String[1], String[1]] $extra_hosts = {},
 ) {
   contain hdp::app_stack::install
