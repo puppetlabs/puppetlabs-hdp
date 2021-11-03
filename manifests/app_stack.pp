@@ -7,6 +7,12 @@
 # @param [Boolean] manage_docker
 #   Install and manage docker as part of app_stack
 #
+# @param [String[1]] log_driver
+#   The log driver Docker will use
+#
+# @param [Optional[String[1]]] data_dir
+#   The data-root that docker will use to store volumes
+#
 # @param [Integer] hdp_port
 #   Port to access HDP upload service
 #
@@ -189,9 +195,6 @@
 #   The version of the HDP UI TLS Frontend container to use
 #   If undef, defaults to hdp_version
 #
-# @param [String[1]] log_driver
-#   The log driver Docker will use
-#
 # @param [Optional[Array[String[1]]]] docker_users
 #   Users to be added to the docker group on the system
 #
@@ -255,6 +258,8 @@ class hdp::app_stack (
 
   Boolean $create_docker_group = true,
   Boolean $manage_docker = true,
+  String[1] $log_driver = 'journald',
+  Optional[String[1]] $data_dir = undef,
   Optional[Array[String[1]]] $docker_users = undef,
   Integer $hdp_port = 9091,
   Integer $hdp_ui_http_port = 80,
@@ -310,7 +315,6 @@ class hdp::app_stack (
   String[1] $hdp_version = '0.0.1',
   Optional[String[1]] $ui_version = undef,
   Optional[String[1]] $frontend_version = undef,
-  String[1] $log_driver = 'journald',
   String[1] $max_es_memory = '4G',
   String[1] $prometheus_namespace = 'hdp',
   Enum['none', 'all', 'admin'] $access_log_level = 'admin',
