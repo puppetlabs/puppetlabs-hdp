@@ -13,8 +13,7 @@ class hdp::app_stack::install () {
       log_driver   => $hdp::app_stack::log_driver,
       root_dir     => $hdp::app_stack::data_dir,
     }
-
-    class { 'docker::compose':
+    -> class { 'docker::compose':
       ensure  => present,
       version => $hdp::app_stack::compose_version,
     }
