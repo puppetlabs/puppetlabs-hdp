@@ -6,12 +6,15 @@
       Integer $hdp_port,
       Integer $hdp_query_port,
 
-      Enum['basic_auth', 'oidc', 'none'] $hdp_query_auth,
+      Enum['basic_auth', 'oidc', 'pe_rbac', 'none'] $hdp_query_auth,
       Optional[String] $hdp_query_username,
       Optional[Sensitive[String]] $hdp_query_password,
       Optional[String] $hdp_query_oidc_issuer,
       Optional[String] $hdp_query_oidc_client_id,
       Optional[String] $hdp_query_oidc_audience,
+      Optional[Stdlib::HTTPUrl] $hdp_query_pe_rbac_service,
+      Integer $hdp_query_pe_rbac_role_id,
+      String $hdp_query_pe_rbac_ca_cert_file,
 
       Integer $hdp_ui_http_port,
       Integer $hdp_ui_https_port,
@@ -53,6 +56,7 @@
       String $max_es_memory,
       String $prometheus_namespace,
       Enum['all', 'admin', 'none'] $access_log_level,
+      Optional[Stdlib::HTTPUrl] $dashboard_url,
       Hash[String, String] $extra_hosts,
 | -%>
 version: "3"
@@ -120,6 +124,16 @@ services:
       - "HDP_HTTP_QUERY_SSO_CLIENTID="
       - "HDP_HTTP_QUERY_SSO_AUDIENCE=<%= $hdp_query_oidc_client_id %>"
     <%- } %>
+      <%- if $hdp_query_auth == 'pe_rbac' { %>  
+        - "HDP_HTTP_QUERY_PE_RBAC_SERVICE_LOCATION=<%= $hdp_query_pe_rbac_service %>"
+        - "HDP_HTTP_QUERY_PE_RBAC_ROLE_ID=<%= $hdp_query_pe_rbac_role_id %>"
+        <%- if $hdp_query_pe_rbac_ca_cert_file != '-' { %>  ## Don't set, i.e. use system CA, when set to -
+        - "HDP_HTTP_QUERY_PE_RBAC_CA_CERT_FILE=/etc/puppetlabs/puppet/ssl/certs/ca.pem" ## This is handled by the volume mounts - always place in this location
+        <%- } %>
+      <%- } %>
+      <%- if $dashboard_url { %>  
+      - "HDP_JOBS_DASHBOARD_URL=<%= $dashboard_url %>"
+      <%- } %>
       - "HDP_HTTP_QUERY_NO_TLS=<%= !$ui_use_tls %>"
       <%- if $ui_key_file { %>
       - "HDP_HTTP_QUERY_KEYFILE=<%= $ui_key_file %>"
@@ -144,6 +158,9 @@ services:
       - "/etc/puppetlabs/puppet/ssl/private_keys/<%= $dns_name %>.pem:/etc/puppetlabs/puppet/ssl/data-ingestion.key.pem:ro"
       - "/etc/puppetlabs/puppet/ssl/certs/ca.pem:/etc/puppetlabs/puppet/ssl/ca.cert.pem:ro"
 <%- } %>
+<%- if $hdp_query_auth == 'pe_rbac' and $hdp_query_pe_rbac_ca_cert_file != '-' { %>  
+      - "<%= $hdp_query_pe_rbac_ca_cert_file %>:/etc/puppetlabs/puppet/ssl/ca.pem:ro"
+<%- } %>
 <%- if $ui_key_file { %>
       - "<%= $ui_key_file %>:<%= $ui_key_file %>:ro"
 <%- } %>
@@ -157,6 +174,7 @@ services:
   elasticsearch:
     image: "<%= $elasticsearch_image %>"
     hostname: "elasticsearch"
+    restart: "always"
     environment:
       - "node.name=elasticsearch-0"
       - "discovery.type=single-node"
@@ -170,6 +188,7 @@ services:
   minio:
     image: "<%= $minio_image %>"
     hostname: "minio"
+    restart: "always"
     environment:
       - "MINIO_ACCESS_KEY=<%= $hdp_s3_access_key %>"
       - "MINIO_SECRET_KEY=<%= unwrap($hdp_s3_secret_key) %>"
@@ -182,11 +201,13 @@ services:
   redis:
     image: "<%= $redis_image %>"
     hostname: "redis"
+    restart: "always"
     volumes:
       - "redis:/data"
     command: "redis-server --appendonly yes"
   ui-frontend:
     image: "<% if $image_repository { %><%= $image_repository %>/<% } %><%= $image_prefix %>ui-frontend:<%= $frontend_version %>"
+    restart: "always"
     ports:
       - "<%= $hdp_ui_http_port %>:80"
 <%- if $ui_use_tls { %>
@@ -203,6 +224,7 @@ services:
 <%- } %>
   ui:
     image: "<% if $image_repository { %><%= $image_repository %>/<% } %><%= $image_prefix %>ui:<%= $ui_version %>"
+    restart: "always"
     environment:
       - "PORT=3000"
 <%- if $hdp_query_auth == 'oidc' { %>

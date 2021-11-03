@@ -11,9 +11,9 @@ class hdp::app_stack::install () {
     class { 'docker':
       docker_users => $hdp::app_stack::docker_users,
       log_driver   => $hdp::app_stack::log_driver,
+      root_dir     => $hdp::app_stack::data_dir,
     }
-
-    class { 'docker::compose':
+    -> class { 'docker::compose':
       ensure  => present,
       version => $hdp::app_stack::compose_version,
     }
