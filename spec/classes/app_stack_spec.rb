@@ -456,6 +456,46 @@ describe 'hdp::app_stack' do
               .with_content(%r{REACT_APP_SSO_CLIENT_ID=bar})
           }
         end
+        context 'pe_rbac - defaults' do
+          let(:params) do
+            {
+              'dns_name' => 'hdp.test.com',
+              'hdp_query_auth' => 'pe_rbac',
+              'hdp_query_pe_rbac_service' => 'https://puppet:4433/rbac-api',
+            }
+          end
+
+          it { is_expected.to compile.with_all_deps }
+          it {
+            is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+              .without_content(%r{HDP_HTTP_QUERY_USER=})
+              .without_content(%r{HDP_HTTP_QUERY_PASSWORD=})
+              .with_content(%r{HDP_HTTP_QUERY_PE_RBAC_SERVICE_LOCATION=https://puppet:4433/rbac-api})
+              .with_content(%r{HDP_HTTP_QUERY_PE_RBAC_ROLE_ID=1})
+              .with_content(%r{HDP_HTTP_QUERY_PE_RBAC_CA_CERT_FILE=/etc/puppetlabs/puppet/ssl/certs/ca\.pem})
+          }
+        end
+        context 'pe_rbac - specified, system CA' do
+          let(:params) do
+            {
+              'dns_name' => 'hdp.test.com',
+              'hdp_query_auth' => 'pe_rbac',
+              'hdp_query_pe_rbac_service' => 'https://puppet:4433/rbac-api',
+              'hdp_query_pe_rbac_role_id' => 2,
+              'hdp_query_pe_rbac_ca_cert_file' => '-',
+            }
+          end
+
+          it { is_expected.to compile.with_all_deps }
+          it {
+            is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+              .without_content(%r{HDP_HTTP_QUERY_USER=})
+              .without_content(%r{HDP_HTTP_QUERY_PASSWORD=})
+              .with_content(%r{HDP_HTTP_QUERY_PE_RBAC_SERVICE_LOCATION=https://puppet:4433/rbac-api})
+              .with_content(%r{HDP_HTTP_QUERY_PE_RBAC_ROLE_ID=2})
+              .without_content(%r{HDP_HTTP_QUERY_PE_RBAC_CA_CERT_FILE})
+          }
+        end
         context 'basic - specified' do
           let(:params) do
             {
