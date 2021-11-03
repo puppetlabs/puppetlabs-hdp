@@ -174,6 +174,7 @@ services:
   elasticsearch:
     image: "<%= $elasticsearch_image %>"
     hostname: "elasticsearch"
+    restart: "always"
     environment:
       - "node.name=elasticsearch-0"
       - "discovery.type=single-node"
@@ -187,6 +188,7 @@ services:
   minio:
     image: "<%= $minio_image %>"
     hostname: "minio"
+    restart: "always"
     environment:
       - "MINIO_ACCESS_KEY=<%= $hdp_s3_access_key %>"
       - "MINIO_SECRET_KEY=<%= unwrap($hdp_s3_secret_key) %>"
@@ -199,11 +201,13 @@ services:
   redis:
     image: "<%= $redis_image %>"
     hostname: "redis"
+    restart: "always"
     volumes:
       - "redis:/data"
     command: "redis-server --appendonly yes"
   ui-frontend:
     image: "<% if $image_repository { %><%= $image_repository %>/<% } %><%= $image_prefix %>ui-frontend:<%= $frontend_version %>"
+    restart: "always"
     ports:
       - "<%= $hdp_ui_http_port %>:80"
 <%- if $ui_use_tls { %>
@@ -220,6 +224,7 @@ services:
 <%- } %>
   ui:
     image: "<% if $image_repository { %><%= $image_repository %>/<% } %><%= $image_prefix %>ui:<%= $ui_version %>"
+    restart: "always"
     environment:
       - "PORT=3000"
 <%- if $hdp_query_auth == 'oidc' { %>
