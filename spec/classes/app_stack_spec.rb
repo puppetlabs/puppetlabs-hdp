@@ -441,7 +441,7 @@ describe 'hdp::app_stack' do
               'dns_name' => 'hdp.test.com',
               'hdp_query_auth' => 'oidc',
               'hdp_query_oidc_issuer' => 'foo',
-              'hdp_query_oidc_client_id' => 'bar',
+              'hdp_query_oidc_audience' => 'bar',
             }
           end
 
@@ -451,7 +451,7 @@ describe 'hdp::app_stack' do
               .without_content(%r{HDP_HTTP_QUERY_USER=})
               .without_content(%r{HDP_HTTP_QUERY_PASSWORD=})
               .with_content(%r{HDP_HTTP_QUERY_SSO_ISSUER=foo})
-              .with_content(%r{HDP_HTTP_QUERY_SSO_CLIENTID=bar})
+              .with_content(%r{HDP_HTTP_QUERY_SSO_AUDIENCE=bar})
               .with_content(%r{REACT_APP_SSO_ISSUER=foo})
               .with_content(%r{REACT_APP_SSO_CLIENT_ID=bar})
           }

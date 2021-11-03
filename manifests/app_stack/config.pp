@@ -70,7 +70,7 @@ class hdp::app_stack::config () {
     if $hdp::app_stack::hdp_query_oidc_issuer == undef {
       fail()
     }
-    if $hdp::app_stack::hdp_query_oidc_client_id == undef {
+    if $hdp::app_stack::hdp_query_oidc_audience == undef {
       fail()
     }
   }

@@ -122,7 +122,7 @@ services:
     <%- if $hdp_query_auth == 'oidc' { %>  
       - "HDP_HTTP_QUERY_SSO_ISSUER=<%= $hdp_query_oidc_issuer %>"
       - "HDP_HTTP_QUERY_SSO_CLIENTID="
-      - "HDP_HTTP_QUERY_SSO_AUDIENCE=<%= $hdp_query_oidc_client_id %>"
+      - "HDP_HTTP_QUERY_SSO_AUDIENCE=<%= $hdp_query_oidc_audience %>"
     <%- } %>
       <%- if $hdp_query_auth == 'pe_rbac' { %>  
         - "HDP_HTTP_QUERY_PE_RBAC_SERVICE_LOCATION=<%= $hdp_query_pe_rbac_service %>"
@@ -229,7 +229,7 @@ services:
       - "PORT=3000"
 <%- if $hdp_query_auth == 'oidc' { %>
       - "REACT_APP_SSO_ISSUER=<%= $hdp_query_oidc_issuer %>"
-      - "REACT_APP_SSO_CLIENT_ID=<%= $hdp_query_oidc_client_id %>"
+      - "REACT_APP_SSO_CLIENT_ID=<%= $hdp_query_oidc_audience %>"
 <%- } %>
 <%- if $ui_use_tls { %>
       - "REACT_APP_QUERY_SERVICE=https://<%= $dns_name %>:<%= $hdp_query_port %>"
