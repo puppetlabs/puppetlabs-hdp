@@ -13,11 +13,13 @@
 # @param [Integer] hdp_query_port
 #   Port to access HDP query service
 #
-# @param [Enum['basic_auth', 'oidc', 'none']] hdp_query_auth
+# @param [Enum['basic_auth', 'oidc', 'pe_rbac', 'none']] hdp_query_auth
 #   What format to use for query authentication
 #   'basic_auth' will use hdp_query_username and hdp_query_password to handle auth.
 #   'oidc' will use hdp_query_oidc_issuer and hdp_query_oidc_client_id to handle auth.
 #   'oidc' currently only supports Okta as an authn provider.
+#   'pe_rbac' will cause the HDP to call out to a PE RBAC server to validate tokens from the UI. 
+#   'pe_rbac' is currently not supported by the UI, so only use this if you plan on making queries via the API directly.
 #   'none' uses no auth for queries
 #   Defaults to 'none'
 #
@@ -38,6 +40,22 @@
 #
 # @param [Optional[String]] hdp_query_oidc_audience
 #   The audience of the issued OIDC token
+#
+# @param [Optional[Stdlib::HTTPUrl]] hdp_query_pe_rbac_service
+#   The URL of the pe_rbac_service
+#   Includes protocol, hostname, port, and rbac-api prefix if present, but no version number.
+#   Example: https://puppet:4433/rbac-api
+#   Required if hdp_query_auth = 'pe_rbac'
+#
+# @param [Integer] hdp_query_pe_rbac_role_id
+#   The role_id of the PE RBAC role allowed to query the HDP.
+#   Defaults to 1, which is the Administrator group by default.
+#   Superusers are allowed allowed to query the HDP.
+#
+# @param [String] hdp_query_pe_rbac_ca_cert_file
+#   The CA Certfile to use for authenticate the RBAC Server
+#   Defaults to /etc/puppetlabs/puppet/ssl/certs/ca.pem
+#   Set to '-' to use system CAs
 #
 # @param [Integer] hdp_ui_http_port
 #   Port to access HDP UI via http
@@ -243,12 +261,15 @@ class hdp::app_stack (
   Integer $hdp_ui_https_port = 443,
   Integer $hdp_query_port = 9092,
 
-  Enum['basic_auth', 'oidc', 'none'] $hdp_query_auth = 'none',
+  Enum['basic_auth', 'oidc', 'pe_rbac', 'none'] $hdp_query_auth = 'none',
   Optional[String[1]] $hdp_query_username = undef,
   Optional[Sensitive[String[1]]] $hdp_query_password = undef,
   Optional[String[1]] $hdp_query_oidc_issuer = undef,
   Optional[String] $hdp_query_oidc_client_id = undef,
   Optional[String] $hdp_query_oidc_audience = undef,
+  Optional[Stdlib::HTTPUrl] $hdp_query_pe_rbac_service = undef,
+  Integer $hdp_query_pe_rbac_role_id = 1,
+  String $hdp_query_pe_rbac_ca_cert_file = '/etc/puppetlabs/puppet/ssl/certs/ca.pem',
 
   String[1] $hdp_user = '11223',
   String[1] $compose_version = '1.25.0',
