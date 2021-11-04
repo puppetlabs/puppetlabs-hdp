@@ -119,28 +119,28 @@ services:
       - "HDP_HTTP_QUERY_PASSWORD=<%= regsubst(unwrap($hdp_query_password), '\$', '$$', 'G') %>"
       <%- } %>
     <%- } %>
-      <%- if $hdp_query_auth == 'oidc' { %>  
-        - "HDP_HTTP_QUERY_SSO_ISSUER=<%= $hdp_query_oidc_issuer %>"
-        - "HDP_HTTP_QUERY_SSO_CLIENTID=<%= $hdp_query_oidc_client_id %>"
-        - "HDP_HTTP_QUERY_SSO_AUDIENCE=<%= $hdp_query_oidc_audience %>"
+    <%- if $hdp_query_auth == 'oidc' { %>  
+      - "HDP_HTTP_QUERY_SSO_ISSUER=<%= $hdp_query_oidc_issuer %>"
+      - "HDP_HTTP_QUERY_SSO_CLIENTID=<%= $hdp_query_oidc_client_id %>"
+      - "HDP_HTTP_QUERY_SSO_AUDIENCE=<%= $hdp_query_oidc_audience %>"
+    <%- } %>
+    <%- if $hdp_query_auth == 'pe_rbac' { %>  
+      - "HDP_HTTP_QUERY_PE_RBAC_SERVICE_LOCATION=<%= $hdp_query_pe_rbac_service %>"
+      - "HDP_HTTP_QUERY_PE_RBAC_ROLE_ID=<%= $hdp_query_pe_rbac_role_id %>"
+      <%- if $hdp_query_pe_rbac_ca_cert_file != '-' { %>  ## Don't set, i.e. use system CA, when set to -
+      - "HDP_HTTP_QUERY_PE_RBAC_CA_CERT_FILE=/etc/puppetlabs/puppet/ssl/certs/ca.pem" ## This is handled by the volume mounts - always place in this location
       <%- } %>
-      <%- if $hdp_query_auth == 'pe_rbac' { %>  
-        - "HDP_HTTP_QUERY_PE_RBAC_SERVICE_LOCATION=<%= $hdp_query_pe_rbac_service %>"
-        - "HDP_HTTP_QUERY_PE_RBAC_ROLE_ID=<%= $hdp_query_pe_rbac_role_id %>"
-        <%- if $hdp_query_pe_rbac_ca_cert_file != '-' { %>  ## Don't set, i.e. use system CA, when set to -
-        - "HDP_HTTP_QUERY_PE_RBAC_CA_CERT_FILE=/etc/puppetlabs/puppet/ssl/certs/ca.pem" ## This is handled by the volume mounts - always place in this location
-        <%- } %>
-      <%- } %>
-      <%- if $dashboard_url { %>  
+    <%- } %>
+    <%- if $dashboard_url { %>  
       - "HDP_JOBS_DASHBOARD_URL=<%= $dashboard_url %>"
-      <%- } %>
+    <%- } %>
       - "HDP_HTTP_QUERY_NO_TLS=<%= !$ui_use_tls %>"
-      <%- if $ui_key_file { %>
+    <%- if $ui_key_file { %>
       - "HDP_HTTP_QUERY_KEYFILE=<%= $ui_key_file %>"
-      <%- } %>
-      <%- if $ui_cert_file { %>
+    <%- } %>
+    <%- if $ui_cert_file { %>
       - "HDP_HTTP_QUERY_CERTFILE=<%= $ui_cert_file %>"
-      <%- } %>
+    <%- } %>
       - "HDP_ADMIN_PROMETHEUS_NAMESPACE=<%= $prometheus_namespace %>"
       - "HDP_ADMIN_ACCESS_LOG_LEVEL=<%= $access_log_level %>"
     links:
@@ -230,6 +230,9 @@ services:
 <%- if $hdp_query_auth == 'oidc' { %>
       - "REACT_APP_SSO_ISSUER=<%= $hdp_query_oidc_issuer %>"
       - "REACT_APP_SSO_CLIENT_ID=<%= $hdp_query_oidc_client_id %>"
+<%- } %>
+<%- if $hdp_query_auth == 'pe_rbac' { %>
+      - "REACT_APP_PE_RBAC_SERVICE=<%= $hdp_query_pe_rbac_service %>/v1"
 <%- } %>
 <%- if $ui_use_tls { %>
       - "REACT_APP_QUERY_SERVICE=https://<%= $dns_name %>:<%= $hdp_query_port %>"
