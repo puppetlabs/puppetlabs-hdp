@@ -84,6 +84,8 @@ The following parameters are available in the `hdp::app_stack` class:
 
 * [`create_docker_group`](#create_docker_group)
 * [`manage_docker`](#manage_docker)
+* [`log_driver`](#log_driver)
+* [`data_dir`](#data_dir)
 * [`hdp_port`](#hdp_port)
 * [`hdp_query_port`](#hdp_query_port)
 * [`hdp_query_auth`](#hdp_query_auth)
@@ -92,6 +94,9 @@ The following parameters are available in the `hdp::app_stack` class:
 * [`hdp_query_oidc_issuer`](#hdp_query_oidc_issuer)
 * [`hdp_query_oidc_client_id`](#hdp_query_oidc_client_id)
 * [`hdp_query_oidc_audience`](#hdp_query_oidc_audience)
+* [`hdp_query_pe_rbac_service`](#hdp_query_pe_rbac_service)
+* [`hdp_query_pe_rbac_role_id`](#hdp_query_pe_rbac_role_id)
+* [`hdp_query_pe_rbac_ca_cert_file`](#hdp_query_pe_rbac_ca_cert_file)
 * [`hdp_ui_http_port`](#hdp_ui_http_port)
 * [`hdp_ui_https_port`](#hdp_ui_https_port)
 * [`hdp_manage_es`](#hdp_manage_es)
@@ -124,14 +129,15 @@ The following parameters are available in the `hdp::app_stack` class:
 * [`ui_ca_cert_file`](#ui_ca_cert_file)
 * [`dns_name`](#dns_name)
 * [`dns_alt_names`](#dns_alt_names)
+* [`version`](#version)
 * [`hdp_version`](#hdp_version)
 * [`ui_version`](#ui_version)
 * [`frontend_version`](#frontend_version)
-* [`log_driver`](#log_driver)
 * [`docker_users`](#docker_users)
 * [`max_es_memory`](#max_es_memory)
 * [`prometheus_namespace`](#prometheus_namespace)
 * [`access_log_level`](#access_log_level)
+* [`dashboard_url`](#dashboard_url)
 * [`extra_hosts`](#extra_hosts)
 
 ##### <a name="create_docker_group"></a>`create_docker_group`
@@ -149,6 +155,22 @@ Data type: `Boolean`
 Install and manage docker as part of app_stack
 
 Default value: ``true``
+
+##### <a name="log_driver"></a>`log_driver`
+
+Data type: `String[1]`
+
+The log driver Docker will use
+
+Default value: `'journald'`
+
+##### <a name="data_dir"></a>`data_dir`
+
+Data type: `Optional[String[1]]`
+
+The data-root that docker will use to store volumes
+
+Default value: ``undef``
 
 ##### <a name="hdp_port"></a>`hdp_port`
 
@@ -168,12 +190,14 @@ Default value: `9092`
 
 ##### <a name="hdp_query_auth"></a>`hdp_query_auth`
 
-Data type: `Enum['basic_auth', 'oidc', 'none']`
+Data type: `Enum['basic_auth', 'oidc', 'pe_rbac', 'none']`
 
 What format to use for query authentication
 'basic_auth' will use hdp_query_username and hdp_query_password to handle auth.
 'oidc' will use hdp_query_oidc_issuer and hdp_query_oidc_client_id to handle auth.
 'oidc' currently only supports Okta as an authn provider.
+'pe_rbac' will cause the HDP to call out to a PE RBAC server to validate tokens from the UI.
+'pe_rbac' is currently not supported by the UI, so only use this if you plan on making queries via the API directly.
 'none' uses no auth for queries
 Defaults to 'none'
 
@@ -221,6 +245,37 @@ Data type: `Optional[String]`
 The audience of the issued OIDC token
 
 Default value: ``undef``
+
+##### <a name="hdp_query_pe_rbac_service"></a>`hdp_query_pe_rbac_service`
+
+Data type: `Optional[Stdlib::HTTPUrl]`
+
+The URL of the pe_rbac_service
+Includes protocol, hostname, port, and rbac-api prefix if present, but no version number.
+Example: https://puppet:4433/rbac-api
+Required if hdp_query_auth = 'pe_rbac'
+
+Default value: ``undef``
+
+##### <a name="hdp_query_pe_rbac_role_id"></a>`hdp_query_pe_rbac_role_id`
+
+Data type: `Integer`
+
+The role_id of the PE RBAC role allowed to query the HDP.
+Defaults to 1, which is the Administrator group by default.
+Superusers are allowed allowed to query the HDP.
+
+Default value: `1`
+
+##### <a name="hdp_query_pe_rbac_ca_cert_file"></a>`hdp_query_pe_rbac_ca_cert_file`
+
+Data type: `String`
+
+The CA Certfile to use for authenticate the RBAC Server
+Defaults to /etc/puppetlabs/puppet/ssl/certs/ca.pem
+Set to '-' to use system CAs
+
+Default value: `'/etc/puppetlabs/puppet/ssl/certs/ca.pem'`
 
 ##### <a name="hdp_ui_http_port"></a>`hdp_ui_http_port`
 
@@ -502,6 +557,14 @@ Extra dns names attached to the puppet cert, can be used to bypass certname coll
 
 Default value: `[]`
 
+##### <a name="version"></a>`version`
+
+Data type: `Optional[String[1]]`
+
+The super version to use of the components. If this is set, sets all the sub-component versions to this.
+
+Default value: ``undef``
+
 ##### <a name="hdp_version"></a>`hdp_version`
 
 Data type: `String[1]`
@@ -527,14 +590,6 @@ The version of the HDP UI TLS Frontend container to use
 If undef, defaults to hdp_version
 
 Default value: ``undef``
-
-##### <a name="log_driver"></a>`log_driver`
-
-Data type: `String[1]`
-
-The log driver Docker will use
-
-Default value: `'journald'`
 
 ##### <a name="docker_users"></a>`docker_users`
 
@@ -572,6 +627,17 @@ and the user behind it.
 The option 'all' causes all data queries to be logged.
 
 Default value: `'admin'`
+
+##### <a name="dashboard_url"></a>`dashboard_url`
+
+Data type: `Optional[Stdlib::HTTPUrl]`
+
+The URL of the dashboard, where you would visit the UI in your browser.
+This parameter is used to configure alerts, so if you plan on using Relay
+or another alert handler, you should set this option if you want your links
+in your alerts to point you to the right place.
+
+Default value: ``undef``
 
 ##### <a name="extra_hosts"></a>`extra_hosts`
 
