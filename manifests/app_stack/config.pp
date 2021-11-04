@@ -20,6 +20,24 @@ class hdp::app_stack::config () {
     }
   }
 
+  if $hdp::app_stack::version {
+    $_final_hdp_version = $hdp::app_stack::version
+    $_final_ui_version = $hdp::app_stack::version
+    $_final_frontend_version = $hdp::app_stack::version
+  } else {
+    $_final_hdp_version = $hdp::app_stack::hdp_version
+    unless $hdp::app_stack::ui_version {
+      $_final_ui_version = $hdp::app_stack::hdp_version
+    } else {
+      $_final_ui_version = $hdp::app_stack::ui_version
+    }
+    unless $hdp::app_stack::frontend_version {
+      $_final_frontend_version = $hdp::app_stack::hdp_version
+    } else {
+      $_final_frontend_version = $hdp::app_stack::frontend_version
+    }
+  }
+
   $_final_hdp_s3_access_key = $hdp::app_stack::hdp_s3_access_key
   $_final_hdp_s3_secret_key = $hdp::app_stack::hdp_s3_secret_key
   if $hdp::app_stack::hdp_manage_s3 {
@@ -44,18 +62,6 @@ class hdp::app_stack::config () {
     $_final_hdp_es_username = $hdp::app_stack::hdp_es_username
     $_final_hdp_es_password = $hdp::app_stack::hdp_es_password
     $_final_hdp_es_host = $hdp::app_stack::hdp_es_host
-  }
-
-  unless $hdp::app_stack::ui_version {
-    $_final_ui_version = $hdp::app_stack::hdp_version
-  } else {
-    $_final_ui_version = $hdp::app_stack::ui_version
-  }
-
-  unless $hdp::app_stack::frontend_version {
-    $_final_frontend_version = $hdp::app_stack::hdp_version
-  } else {
-    $_final_frontend_version = $hdp::app_stack::frontend_version
   }
 
   if $hdp::app_stack::hdp_query_auth == 'basic_auth' {
@@ -99,7 +105,7 @@ class hdp::app_stack::config () {
       owner   => 'root',
       group   => 'docker',
       content => epp('hdp/docker-compose.yaml.epp', {
-          'hdp_version'                    => $hdp::app_stack::hdp_version,
+          'hdp_version'                    => $_final_hdp_version,
           'ui_version'                     => $_final_ui_version,
           'frontend_version'               => $_final_frontend_version,
           'image_prefix'                   => $hdp::app_stack::image_prefix,
