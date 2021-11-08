@@ -234,6 +234,26 @@ describe 'hdp::app_stack' do
             .with_content(%r{hub.docker.com/ui-frontend:foo})
         }
       end
+      context 'with super version' do
+        let(:params) do
+          {
+            'dns_name' => 'hdp.test.com',
+            'image_repository' => 'hub.docker.com',
+            'image_prefix' => '',
+            'version' => 'baz',
+          }
+        end
+
+        it { is_expected.to compile.with_all_deps }
+        it {
+          is_expected.to contain_file('/opt/puppetlabs/hdp/docker-compose.yaml')
+            .with_owner('root')
+            .with_group('docker')
+            .with_content(%r{hub.docker.com/data-ingestion:baz})
+            .with_content(%r{hub.docker.com/ui:baz})
+            .with_content(%r{hub.docker.com/ui-frontend:baz})
+        }
+      end
 
       context 'hdp admin config options' do
         context 'set prometheus namespace' do

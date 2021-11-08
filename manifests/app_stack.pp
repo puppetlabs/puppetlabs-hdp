@@ -184,6 +184,9 @@
 # @param [Array[String[1]]] dns_alt_names
 #   Extra dns names attached to the puppet cert, can be used to bypass certname collisions
 #
+# @param [Optional[String[1]]] version
+#   The super version to use of the components. If this is set, sets all the sub-component versions to this.
+#
 # @param [String[1]] hdp_version
 #   The version of the HDP Data container to use
 #
@@ -312,6 +315,7 @@ class hdp::app_stack (
   Boolean $hdp_s3_disable_ssl = true,
 
   String $image_prefix = 'puppet/hdp-',
+  Optional[String[1]] $version = undef,
   String[1] $hdp_version = '0.0.1',
   Optional[String[1]] $ui_version = undef,
   Optional[String[1]] $frontend_version = undef,
