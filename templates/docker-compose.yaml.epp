@@ -176,6 +176,7 @@ services:
   - <%= "${h}:${ip}" %>
   <%- } -%>
 <%- } %>
+
 <%- if $hdp_manage_es { %>
   elasticsearch:
     image: "<%= $elasticsearch_image %>"
