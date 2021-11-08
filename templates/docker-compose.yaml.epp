@@ -159,7 +159,7 @@ services:
       - "/etc/puppetlabs/puppet/ssl/certs/ca.pem:/etc/puppetlabs/puppet/ssl/ca.cert.pem:ro"
 <%- } %>
 <%- if $hdp_query_auth == 'pe_rbac' and $hdp_query_pe_rbac_ca_cert_file != '-' { %>  
-      - "<%= $hdp_query_pe_rbac_ca_cert_file %>:/etc/puppetlabs/puppet/ssl/ca.pem:ro"
+      - "<%= $hdp_query_pe_rbac_ca_cert_file %>:/etc/puppetlabs/puppet/ssl/certs/ca.pem:ro"
 <%- } %>
 <%- if $ui_key_file { %>
       - "<%= $ui_key_file %>:<%= $ui_key_file %>:ro"
@@ -169,6 +169,12 @@ services:
 <%- } %>
 <%- if $ui_ca_cert_file { %>
       - "<%= $ui_ca_cert_file %>:<%= $ui_ca_cert_file %>:ro"
+<%- } %>
+<%- if length($extra_hosts) > 0 { %>
+  extra_hosts:
+  <%- $extra_hosts.each |$h, $ip| { %>
+  - <%= "${h}:${ip}" %>
+  <%- } -%>
 <%- } %>
 <%- if $hdp_manage_es { %>
   elasticsearch:
@@ -232,18 +238,12 @@ services:
       - "REACT_APP_SSO_CLIENT_ID=<%= $hdp_query_oidc_client_id %>"
 <%- } %>
 <%- if $hdp_query_auth == 'pe_rbac' { %>
-      - "REACT_APP_PE_RBAC_SERVICE=<%= $hdp_query_pe_rbac_service %>/v1"
+      - "REACT_APP_PE_RBAC_SERVICE=https://<%= $dns_name %>:<%= $hdp_query_port %>/proxy"
 <%- } %>
 <%- if $ui_use_tls { %>
       - "REACT_APP_QUERY_SERVICE=https://<%= $dns_name %>:<%= $hdp_query_port %>"
 <%- } else { %> 
       - "REACT_APP_QUERY_SERVICE=http://<%= $dns_name %>:<%= $hdp_query_port %>"
-<%- } %>
-<%- if length($extra_hosts) > 0 { %>
-extra_hosts:
-  <%- $extra_hosts.each |$h, $ip| { %>
-  - <%= "${h}:${ip}" %>
-  <%- } -%>
 <%- } %>
 volumes:
   redis:
