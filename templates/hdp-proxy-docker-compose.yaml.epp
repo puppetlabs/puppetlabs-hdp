@@ -1,0 +1,83 @@
+<%- | String $hdp_version,
+      String $image_prefix,
+      Optional[String] $image_repository,
+      Integer $hdp_port,
+
+      Optional[String] $ca_server,
+      Optional[String] $ca_cert_file,
+      Optional[String] $key_file,
+      Optional[String] $cert_file,
+
+      Boolean $mount_host_certs,
+
+      String $dns_name,
+      Array[String] $dns_alt_names,
+      String $hdp_user,
+      String $root_dir,
+      String $prometheus_namespace,
+      Hash[String, String] $extra_hosts,
+| -%>
+version: "3"
+services:
+  data:
+    image: "<% if $image_repository { %><%= $image_repository %>/<% } %><%= $image_prefix %>data-ingestion:<%= $hdp_version %>"
+    user: "<%= $hdp_user %>:<%= $hdp_user %>"
+    restart: "always"
+    ports:
+      - "<%= $hdp_port %>:9091"
+    environment:
+      - "GIN_MODE=release"
+      - "HDP_SSL_DIR=/etc/puppetlabs/puppet/ssl"
+      <%- if $ca_server { %>
+      - "HDP_CASERVER=<%= $ca_server %>"
+      <%- } %>
+      - "HDP_HTTP_UPLOAD_ENABLED=true"
+      - "HDP_HTTP_UPLOAD_NO_TLS=false"
+      <%- if $ca_cert_file { %>
+      - "HDP_HTTP_UPLOAD_CACERTFILE=<%= $ca_cert_file %>"
+      <%- } %>
+      <%- if $key_file { %>
+      - "HDP_HTTP_UPLOAD_KEYFILE=<%= $key_file%>"
+      <%- } %>
+      <%- if $cert_file { %>
+      - "HDP_HTTP_UPLOAD_CERTFILE=<%= $cert_file%>"
+      <%- } %>
+      - "HDP_DNSNAMES=<%= join($dns_alt_names, ',') %>"
+      - "HDP_NAME=<%= $dns_name %>"
+      - "HDP_KV_ENABLED=false"
+      - "HDP_BACKENDS_ES_ENABLED=false"
+      - "HDP_BACKENDS_S3_ENABLED=false"
+      - "HDP_BACKENDS_REDIS_ENABLED=false"
+      - "HDP_HTTP_QUERY_ENABLED=false"
+      - "HDP_BACKENDS_HDP_ENABLED=true"
+      - "HDP_BACKENDS_HDP_ADDRESS=<%= $address %>"
+      - "HDP_BACKENDS_HDP_ORGANIZATION=<%= $organization %>"
+      - "HDP_BACKENDS_HDP_REGION=<%= $region %>"
+      - "HDP_BACKENDS_HDP_USE_SYSTEM_CAS=<%= $use_system_cas %>"
+      - "HDP_BACKENDS_HDP_CA_CERT_FILE=<%= $ca_cert_file %>"
+      - "HDP_BACKENDS_HDP_CERT_FILE=<%= $client_cert_file %>"
+      - "HDP_BACKENDS_HDP_KEY_FILE=<%= $client_key_file %>"
+      - "HDP_BACKENDS_HDP_TOKEN=<%= $client_token %>"
+      - "HDP_ADMIN_PROMETHEUS_NAMESPACE=<%= $prometheus_namespace %>"
+    volumes:
+      - "<%= $root_dir %>/ssl:/etc/puppetlabs/puppet/ssl"
+<%- if $mount_host_certs { %>
+      - "/etc/puppetlabs/puppet/ssl/certs/<%= $dns_name %>.pem:/etc/puppetlabs/puppet/ssl/data-ingestion.cert.pem:ro"
+      - "/etc/puppetlabs/puppet/ssl/private_keys/<%= $dns_name %>.pem:/etc/puppetlabs/puppet/ssl/data-ingestion.key.pem:ro"
+      - "/etc/puppetlabs/puppet/ssl/certs/ca.pem:/etc/puppetlabs/puppet/ssl/ca.cert.pem:ro"
+<%- } %>
+<%- if $ui_key_file { %>
+      - "<%= $ui_key_file %>:<%= $ui_key_file %>:ro"
+<%- } %>
+<%- if $ui_cert_file { %>
+      - "<%= $ui_cert_file %>:<%= $ui_cert_file %>:ro"
+<%- } %>
+<%- if $ui_ca_cert_file { %>
+      - "<%= $ui_ca_cert_file %>:<%= $ui_ca_cert_file %>:ro"
+<%- } %>
+<%- if length($extra_hosts) > 0 { %>
+  extra_hosts:
+  <%- $extra_hosts.each |$h, $ip| { %>
+  - <%= "${h}:${ip}" %>
+  <%- } -%>
+<%- } %>
