@@ -20,6 +20,9 @@
 # @param [String[1]] compose_version
 #   The version of docker-compose to install
 #
+# @param [Optional[Array[String[1]]]] docker_users
+#   Users to be added to the docker group on the system
+#
 # @param [Optional[String[1]]] image_repository
 #   Image repository to pull images from - defaults to dockerhub.
 #   Can be used for airgapped environments/testing environments
@@ -119,6 +122,7 @@ class hdp::proxy (
 
   String[1] $hdp_user = '11223',
   String[1] $compose_version = '1.25.0',
+  Optional[Array[String[1]]] $docker_users = undef,
   Optional[String[1]] $image_repository = undef,
   String $image_prefix = 'puppet/hdp-',
   Optional[String[1]] $version = 'latest',

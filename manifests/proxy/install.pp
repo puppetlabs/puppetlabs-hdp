@@ -1,6 +1,6 @@
 # @api private
 class hdp::proxy::install () {
-  if $hdp::proxy::create_docker_group {
+  if $hdp::proxy::create_docker_group and $hdp::proxy::manage_docker {
     group { 'docker':
       ensure => 'present',
       before => Class['docker'],
