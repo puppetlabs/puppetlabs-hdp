@@ -221,7 +221,7 @@ services:
       - "REACT_APP_SSO_CLIENT_ID=<%= $hdp_query_oidc_client_id %>"
 <%- } %>
 <%- if $hdp_query_auth == 'pe_rbac' { %>
-      - "REACT_APP_PE_RBAC_SERVICE=https://<%= $dns_name %>:<%= $hdp_query_port %>/proxy"
+      - "REACT_APP_PE_RBAC_SERVICE=https://<%= $dns_name %>:<%= $hdp_query_port %>/api/proxy"
 <%- } %>
 <%- if $ui_use_tls { %>
       - "REACT_APP_QUERY_SERVICE=https://<%= $dns_name %>:<%= $hdp_ui_https_port %>/api/"
