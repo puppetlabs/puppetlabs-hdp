@@ -67,7 +67,6 @@ services:
     restart: "always"
     ports:
       - "<%= $hdp_port %>:9091"
-      - "<%= $hdp_query_port %>:8080"
     environment:
       - "GIN_MODE=release"
       - "HDP_BUCKET_PREFIX="
@@ -107,10 +106,6 @@ services:
       <%- } %>
       - "HDP_DNSNAMES=<%= join($dns_alt_names, ',') %>"
       - "HDP_NAME=<%= $dns_name %>"
-      <%- if $ui_ca_cert_file { %>
-      - "HDP_HTTP_QUERY_CACERTFILE=<%= $ui_ca_cert_file %>"
-      - "HDP_HTTP_QUERY_DISABLE_CLIENT_AUTH=false"
-      <%- } %>
     <%- if $hdp_query_auth == 'basic_auth' or $hdp_query_username { %> ## query_auth is a new parameter, default behavior was basic_auth when username was set.
       <%- if $hdp_query_username { %>
       - "HDP_HTTP_QUERY_USER=<%= $hdp_query_username %>"
@@ -134,13 +129,7 @@ services:
     <%- if $dashboard_url { %>  
       - "HDP_JOBS_DASHBOARD_URL=<%= $dashboard_url %>"
     <%- } %>
-      - "HDP_HTTP_QUERY_NO_TLS=<%= !$ui_use_tls %>"
-    <%- if $ui_key_file { %>
-      - "HDP_HTTP_QUERY_KEYFILE=<%= $ui_key_file %>"
-    <%- } %>
-    <%- if $ui_cert_file { %>
-      - "HDP_HTTP_QUERY_CERTFILE=<%= $ui_cert_file %>"
-    <%- } %>
+      - "HDP_HTTP_QUERY_NO_TLS=TRUE"
       - "HDP_ADMIN_PROMETHEUS_NAMESPACE=<%= $prometheus_namespace %>"
       - "HDP_ADMIN_ACCESS_LOG_LEVEL=<%= $access_log_level %>"
     links:
@@ -160,15 +149,6 @@ services:
 <%- } %>
 <%- if $hdp_query_auth == 'pe_rbac' and $hdp_query_pe_rbac_ca_cert_file != '-' { %>  
       - "<%= $hdp_query_pe_rbac_ca_cert_file %>:/etc/puppetlabs/puppet/ssl/certs/ca.pem:ro"
-<%- } %>
-<%- if $ui_key_file { %>
-      - "<%= $ui_key_file %>:<%= $ui_key_file %>:ro"
-<%- } %>
-<%- if $ui_cert_file { %>
-      - "<%= $ui_cert_file %>:<%= $ui_cert_file %>:ro"
-<%- } %>
-<%- if $ui_ca_cert_file { %>
-      - "<%= $ui_ca_cert_file %>:<%= $ui_ca_cert_file %>:ro"
 <%- } %>
 <%- if length($extra_hosts) > 0 { %>
     extra_hosts:
@@ -224,6 +204,8 @@ services:
       - "HDP_ENABLE_TLS=<%= $ui_use_tls %>"
       - "UI_HOST=ui"
       - "UI_PORT=3000"
+      - "HDP_QUERY=data"
+      - "HDP_QUERY_PORT=8080"
 <%- if $ui_use_tls { %>
     volumes:
       - "<%= $ui_key_file %>:/etc/ssl/key.pem:ro"
@@ -242,9 +224,9 @@ services:
       - "REACT_APP_PE_RBAC_SERVICE=https://<%= $dns_name %>:<%= $hdp_query_port %>/proxy"
 <%- } %>
 <%- if $ui_use_tls { %>
-      - "REACT_APP_QUERY_SERVICE=https://<%= $dns_name %>:<%= $hdp_query_port %>"
+      - "REACT_APP_QUERY_SERVICE=https://<%= $dns_name %>:<%= $hdp_ui_https_port %>/api/"
 <%- } else { %> 
-      - "REACT_APP_QUERY_SERVICE=http://<%= $dns_name %>:<%= $hdp_query_port %>"
+      - "REACT_APP_QUERY_SERVICE=http://<%= $dns_name %>:<%= $hdp_ui_https_port %>/api/"
 <%- } %>
 volumes:
   redis:
