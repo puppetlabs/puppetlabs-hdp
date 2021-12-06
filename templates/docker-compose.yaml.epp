@@ -171,9 +171,9 @@ services:
       - "<%= $ui_ca_cert_file %>:<%= $ui_ca_cert_file %>:ro"
 <%- } %>
 <%- if length($extra_hosts) > 0 { %>
-  extra_hosts:
+    extra_hosts:
   <%- $extra_hosts.each |$h, $ip| { %>
-  - <%= "${h}:${ip}" %>
+    - <%= "${h}:${ip}" %>
   <%- } -%>
 <%- } %>
 
