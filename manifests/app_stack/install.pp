@@ -1,6 +1,6 @@
 # @api private
 class hdp::app_stack::install () {
-  if $hdp::app_stack::create_docker_group {
+  if $hdp::app_stack::create_docker_group and $hdp::app_stack::manage_docker {
     group { 'docker':
       ensure => 'present',
       before => Class['docker'],
