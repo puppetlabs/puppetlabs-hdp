@@ -153,6 +153,12 @@
 #   Puppet PKI cert file - pem encoded.
 #   This or ca_server can be specified
 #
+# @param [Boolean] allow_trust_on_first_use
+#   If true, then the HDP will download the CA and setup its certs and keys from the server if they haven't been provided.
+#   Since the HDP doesn't have any CA before starting this process, it will automatically trust the first server that appears as
+#   ca_server. If you don't explicitly set this value to true, then this module will not deploy an HDP installation without being given
+#   ca_cert_file, key_file, and cert_file.
+#
 # @param [Boolean] ui_use_tls
 #   Use TLS for the UI and HDP Query endpoints
 #
@@ -290,6 +296,7 @@ class hdp::app_stack (
   ## Either one of these two options can be configured
   Optional[String[1]] $ca_server = undef,
 
+  Boolean $allow_trust_on_first_use = true,
   Optional[String[1]] $ca_cert_file = undef,
   Optional[String[1]] $key_file = undef,
   Optional[String[1]] $cert_file = undef,

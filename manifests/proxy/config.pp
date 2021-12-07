@@ -11,6 +11,20 @@ class hdp::proxy::config () {
     $_final_key_file =  $hdp::proxy::key_file
   }
 
+  if !$hdp::proxy::allow_trust_on_first_use {
+    ## All cert_file, key_file, and ca_cert_file must be set if 
+    ## allow_trust_on_first_use is true.
+    if !$_final_key_file {
+      fail('Key file must be provided, or an untrusted download will occur')
+    }
+    if !$_final_cert_file {
+      fail('Cert file must be provided, or an untrusted download will occur')
+    }
+    if !$hdp::proxy::ca_cert_file {
+      fail('CA Cert file must be provided, or an untrusted download will occur')
+    }
+  }
+
   file {
     default:
       ensure  => directory,
