@@ -1,23 +1,52 @@
 # @api private
 class hdp::app_stack::config () {
-  ## Mount host certs for UI if the dns_name is equal to the host's name, or
-  ## if we set ui_use_tls to true, but don't provide key/cert file paths
-  ## if one of cert or key is provided, don't force certnames
+  ## Mount host certs if the dns_name is equal to the host's name, or
+  ## if we set ui_use_tls to true, but don't provide key/cert file paths,
   $_mount_host_certs = $trusted['certname'] == $hdp::app_stack::dns_name
+
+  ## If we are going to be mounting host certs and keys,
+  ## we need to run as the owner of these certs and keys in order to not break anything
   if $_mount_host_certs {
     $_final_hdp_user = pick("${facts.dig('hdp_health', 'puppet_user')}", '0')
+  }
+
+  ## Handle mounting certs for the UI - 
+  ## Which involves HDP Query endpoints and the UI itself
+  ## It is recommended that users user their own publically KI certs for these.
+  ## If mount_host_certs is true, then we should use the host agents certs,
+  ## but we also should for if ui_use_tls is enabled but no paths are provided.
+  if $_mount_host_certs or ($hdp::app_stack::ui_use_tls and !$hdp::app_stack::ui_cert_file and !$hdp::app_stack::ui_key_file) {
     $_final_ui_cert_file = "/etc/puppetlabs/puppet/ssl/certs/${trusted['certname']}.pem"
     $_final_ui_key_file = "/etc/puppetlabs/puppet/ssl/private_keys/${trusted['certname']}.pem"
   } else {
-    if ($hdp::app_stack::ui_use_tls and !$hdp::app_stack::ui_cert_file and !$hdp::app_stack::ui_key_file) {
-      $_final_hdp_user = pick("${facts.dig('hdp_health', 'puppet_user')}", '0')
-      $_final_ui_cert_file = "/etc/puppetlabs/puppet/ssl/certs/${trusted['certname']}.pem"
-      $_final_ui_key_file = "/etc/puppetlabs/puppet/ssl/private_keys/${trusted['certname']}.pem"
-    } else {
-      $_final_hdp_user = $hdp::app_stack::hdp_user
-      $_final_ui_cert_file =  $hdp::app_stack::ui_cert_file
-      $_final_ui_key_file =  $hdp::app_stack::ui_key_file
+    $_final_ui_cert_file =  $hdp::app_stack::ui_cert_file
+    $_final_ui_key_file =  $hdp::app_stack::ui_key_file
+  }
+
+  if $_mount_host_certs {
+    $_final_cert_file = "/etc/puppetlabs/puppet/ssl/certs/${trusted['certname']}.pem"
+    $_final_key_file = "/etc/puppetlabs/puppet/ssl/private_keys/${trusted['certname']}.pem"
+  } else {
+    $_final_cert_file = $hdp::app_stack::cert_file
+    $_final_key_file = $hdp::app_stack::key_file
+  }
+
+  if !$hdp::app_stack::allow_trust_on_first_use {
+    ## All cert_file, key_file, and ca_cert_file must be set if 
+    ## allow_trust_on_first_use is true.
+    if !$_final_key_file {
+      fail('Key file must be provided, or an untrusted download will occur')
     }
+    if !$_final_cert_file {
+      fail('Cert file must be provided, or an untrusted download will occur')
+    }
+    if !$hdp::app_stack::ca_cert_file {
+      fail('CA Cert file must be provided, or an untrusted download will occur')
+    }
+  }
+
+  if !defined('$_final_hdp_user') {
+    $_final_hdp_user = $hdp::app_stack::hdp_user
   }
 
   if $hdp::app_stack::version {
@@ -66,24 +95,36 @@ class hdp::app_stack::config () {
 
   if $hdp::app_stack::hdp_query_auth == 'basic_auth' {
     if $hdp::app_stack::hdp_query_username == undef {
-      fail()
+      fail('Basic auth requires username parameter to be set')
     }
     if $hdp::app_stack::hdp_query_password == undef {
-      fail()
+      fail('Basic auth requires a query password to be set')
     }
   }
   if $hdp::app_stack::hdp_query_auth == 'oidc' {
     if $hdp::app_stack::hdp_query_oidc_issuer == undef {
-      fail()
+      fail('OIDC Auth requires an issuer to validate tokens against')
     }
     if $hdp::app_stack::hdp_query_oidc_client_id == undef {
-      fail()
+      fail('OIDC Auth requires a client ID to use')
     }
   }
   if $hdp::app_stack::hdp_query_auth == 'pe_rbac' {
     if $hdp::app_stack::hdp_query_pe_rbac_service == undef {
-      fail()
+      fail('PE RBAC Auth requires an RBAC service to validate tokens against')
     }
+    ## If PE RBAC is enabled,
+    ## ca_cert_file must be set, or it won't work.
+    ## we should attempt to use $_final_ca_cert_file,
+    ## Which will use one that is downloaded insecurely during the trust-on-first-use step.
+    if $hdp::app_stack::hdp_query_pe_rbac_ca_cert_file == undef {
+      err('PE RBAC configured, but CA Cert not set - defaulting to downloaded CA Cert. Potentially insecure!')
+      $_final_query_pe_rbac_ca_cert_file = $hdp::app_stack::ca_cert_file
+    } else {
+      $_final_query_pe_rbac_ca_cert_file = $hdp::app_stack::hdp_query_pe_rbac_ca_cert_file
+    }
+  } else {
+    $_final_query_pe_rbac_ca_cert_file = $hdp::app_stack::hdp_query_pe_rbac_ca_cert_file
   }
 
   file {
@@ -123,7 +164,7 @@ class hdp::app_stack::config () {
           'hdp_query_oidc_audience'        => $hdp::app_stack::hdp_query_oidc_audience,
           'hdp_query_pe_rbac_service'      => $hdp::app_stack::hdp_query_pe_rbac_service,
           'hdp_query_pe_rbac_role_id'      => $hdp::app_stack::hdp_query_pe_rbac_role_id,
-          'hdp_query_pe_rbac_ca_cert_file' => $hdp::app_stack::hdp_query_pe_rbac_ca_cert_file,
+          'hdp_query_pe_rbac_ca_cert_file' => $_final_query_pe_rbac_ca_cert_file,
 
           'elasticsearch_image'            => $hdp::app_stack::elasticsearch_image,
           'redis_image'                    => $hdp::app_stack::redis_image,
@@ -144,8 +185,8 @@ class hdp::app_stack::config () {
           'hdp_es_password'                => $_final_hdp_es_password,
 
           'ca_server'                      => $hdp::app_stack::ca_server,
-          'key_file'                       => $hdp::app_stack::key_file,
-          'cert_file'                      => $hdp::app_stack::cert_file,
+          'key_file'                       => $_final_key_file,
+          'cert_file'                      => $_final_cert_file,
           'ca_cert_file'                   => $hdp::app_stack::ca_cert_file,
 
           'ui_use_tls'                     => $hdp::app_stack::ui_use_tls,

@@ -152,6 +152,42 @@ describe 'hdp::proxy' do
             .with_content(%r{- "HDP_BACKENDS_HDP_TOKEN=\$\$1\$\$tokencity"})
         }
       end
+      context 'trust-on-first-use failures' do
+        context 'Nothing specified' do
+          let(:params) do
+            {
+              'dns_name' => 'hdp.test.com',
+              'token' => sensitive('$1$tokencity'),
+              'hdp_address' => 'https://hdp.com',
+              'allow_trust_on_first_use' => false,
+              ## if ^ is false, we should fail compilation if certs keys and whatnot are not set.
+            }
+          end
+
+          it { is_expected.to compile.and_raise_error(%r{.*}) }
+        end
+        context 'All specified' do
+          let(:params) do
+            {
+              'dns_name' => 'hdp.test.com',
+              'token' => sensitive('$1$tokencity'),
+              'hdp_address' => 'https://hdp.com',
+              'allow_trust_on_first_use' => false,
+              'ca_cert_file' => '/etc/puppetlabs/puppet/ssl/certs/ca.pem',
+              'cert_file' => '/etc/puppetlabs/puppet/ssl/certs/hdp.test.com.pem',
+              'key_file' => '/etc/puppetlabs/puppet/ssl/private_keys/hdp.test.com.pem',
+            }
+          end
+
+          it { is_expected.to compile.with_all_deps }
+          it {
+            is_expected.to contain_file('/opt/puppetlabs/hdp/proxy/docker-compose.yaml')
+              .with_content(%r{- "HDP_HTTP_UPLOAD_CACERTFILE=/etc/puppetlabs/puppet/ssl/certs/ca\.pem"})
+              .with_content(%r{- "HDP_HTTP_UPLOAD_CERTFILE=/etc/puppetlabs/puppet/ssl/certs/hdp\.test\.com\.pem"})
+              .with_content(%r{- "HDP_HTTP_UPLOAD_KEYFILE=/etc/puppetlabs/puppet/ssl/private_keys/hdp\.test\.com\.pem"})
+          }
+        end
+      end
     end
   end
 end
