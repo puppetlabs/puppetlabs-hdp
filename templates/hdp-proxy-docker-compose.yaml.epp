@@ -72,7 +72,7 @@ services:
       - "HDP_BACKENDS_HDP_KEY_FILE=<%= $client_key_file %>"
       - "HDP_BACKENDS_HDP_TOKEN=<%= regsubst(unwrap($token), '\$', '$$', 'G') %>"
       - "HDP_ADMIN_PROMETHEUS_NAMESPACE=<%= $prometheus_namespace %>"
-      - "HDP_JOBS_CHANGEDETECTION_ENABLED=false"
+      - "HDP_JOBS_ENABLED=false"
     volumes:
       - "<%= $root_dir %>/ssl:/etc/puppetlabs/puppet/ssl"
 <%- if $mount_host_certs { %>
